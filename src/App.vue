@@ -1,26 +1,17 @@
 <template>
-  <n-config-provider :theme="theme">
-    <Navbar />
-  </n-config-provider>
+  <Navbar />
+  <Queue />
+  <Footer />
 </template>
 
 <script setup lang="ts">
-import { darkTheme } from 'naive-ui'
 import Navbar from '@/components/Navbar.vue';
-
-const theme = darkTheme
+import Queue from '@/components/Queue.vue';
+import Footer from '@/components/Footer.vue';
 </script>
 
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
+<style>
+#app {
+  height: 100vh;
 }
 </style>
