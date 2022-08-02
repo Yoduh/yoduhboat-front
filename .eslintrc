@@ -8,16 +8,26 @@
   "extends": [
     "plugin:vue/vue3-recommended",
     "eslint:recommended",
-    "@vue/typescript/recommended"
+    "@vue/typescript/recommended",
+    "prettier"
   ],
   "parserOptions": {
       "ecmaVersion": 2021
   },
   "plugins": [
+    "prettier"
   ],
   "rules": {
     "no-unused-expressions": "off",
     "vue/multi-word-component-names": 0,
-    "vue/no-v-html": "off"
+    "vue/no-v-html": "off",
+    "prettier/prettier": [
+      "error",
+      {
+        "singleQuote": true,
+        "arrowParens": "avoid",
+        "trailingComma": "none"
+      }
+    ]
   }
 }

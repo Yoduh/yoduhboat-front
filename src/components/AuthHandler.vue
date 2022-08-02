@@ -1,0 +1,31 @@
+<template>
+  <div>
+    <h1>Authorizing...</h1>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { useRoute, useRouter } from 'vue-router';
+import { useUserStore } from '@/stores/user';
+import axios from 'axios';
+
+const route = useRoute();
+const router = useRouter();
+const user = useUserStore();
+console.log('in authhandler');
+if (route.query.code) {
+  console.log('code', route.query.code);
+  axios
+    .post(`${import.meta.env.VITE_API}/getToken?code=${route.query.code}`)
+    .then(res => {
+      console.log('setting token', res.data);
+      user.setToken(res.data);
+    })
+    .catch(e => {
+      console.log('eeee', e);
+    })
+    .finally(() => {
+      router.replace('/');
+    });
+}
+</script>

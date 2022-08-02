@@ -1,13 +1,10 @@
 <template>
   <Navbar />
-  <Queue />
-  <Footer />
+  <router-view></router-view>
 </template>
 
 <script setup lang="ts">
 import Navbar from '@/components/Navbar.vue';
-import Queue from '@/components/Queue.vue';
-import Footer from '@/components/Footer.vue';
 </script>
 
 <style>
