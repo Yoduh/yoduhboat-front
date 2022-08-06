@@ -1,11 +1,13 @@
 import { defineStore } from 'pinia';
 import defaultImage from '../assets/discord-logo.png';
-import { sortByKey } from '../helpers/util.js';
+// import { sortByKey } from '../helpers/util.js';
 import axios from 'axios';
+import { api } from '@/plugins/api';
 
 export const useUserStore = defineStore({
   id: 'user',
   state: () => ({
+    isLoading: false,
     access_token: '',
     expires_in: 0,
     refresh_token: '',
@@ -15,7 +17,8 @@ export const useUserStore = defineStore({
     username: '',
     avatar: '',
     guilds: [] as Guild[],
-    guildsWithBloop: [] as Guild[]
+    guildsWithBoat: [] as string[],
+    selectedGuild: ''
   }),
   getters: {
     getUserGuildIds(state) {
@@ -35,9 +38,11 @@ export const useUserStore = defineStore({
           this.scope = token.scope;
           this.token_type = token.token_type;
           this.getUserDetails();
+          this.setInterceptor();
         })
         .catch(e => {
           console.log('setToken error', e);
+          this.isLoading = false;
         });
     },
     getUserDetails() {
@@ -95,7 +100,7 @@ export const useUserStore = defineStore({
               }
             )
             .then(res => {
-              this.guildsWithBloop = res.data;
+              this.guildsWithBoat = res.data;
             })
             .catch(e => {
               console.log('get servers errors', e);
@@ -103,14 +108,33 @@ export const useUserStore = defineStore({
         })
         .catch(e => {
           console.log('get guilds error', e);
+        })
+        .finally(() => {
+          this.isLoading = false;
         });
     },
-    setUserGuildsWithBloop(guildIdsWithBloop: Array<string>) {
-      const filteredGuilds = this.guilds.filter(g =>
-        guildIdsWithBloop.includes(g.id)
+    setInterceptor() {
+      api.interceptors.request.use(
+        config => {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          config.headers!.Authorization = JSON.stringify({
+            id: this.id,
+            access_token: this.access_token
+          });
+          return config;
+        },
+        error => {
+          return Promise.reject(error);
+        }
       );
-      const sortedGuilds = sortByKey(filteredGuilds, 'name');
-      this.guildsWithBloop = sortedGuilds;
     }
+
+    // setUserGuildsWithBoat(guildIdsWithBoat: Array<string>) {
+    //   const filteredGuilds = this.guilds.filter(g =>
+    //     guildIdsWithBoat.includes(g.id)
+    //   );
+    //   const sortedGuilds = sortByKey(filteredGuilds, 'name');
+    //   this.guildsWithBoat = sortedGuilds;
+    // }
   }
 });

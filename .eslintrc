@@ -15,10 +15,13 @@
       "ecmaVersion": 2021
   },
   "plugins": [
+    "flowtype",
     "prettier"
   ],
   "rules": {
     "no-unused-expressions": "off",
+    // https://github.com/typescript-eslint/typescript-eslint/blob/main/docs/linting/TROUBLESHOOTING.md#i-get-errors-from-the-no-undef-rule-about-global-variables-not-being-defined-even-though-there-are-no-typescript-errors
+    "no-undef": "off",
     "vue/multi-word-component-names": 0,
     "vue/no-v-html": "off",
     "prettier/prettier": [

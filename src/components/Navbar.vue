@@ -1,16 +1,54 @@
 <template>
-  <div class="navbar bg-base-100">
+  <div class="navbar z-40">
     <div class="flex-1">
       <img :src="xwing" class="h-6 w-20" />
-      <a class="btn btn-ghost normal-case text-xl p-0">YoduhBoat</a>
+      <a class="btn btn-ghost normal-case text-3xl p-0 ml-3">YoduhBoat</a>
     </div>
     <div class="flex-none">
+      <div v-if="user.guildsWithBoat.length > 0" class="mr-10">
+        <div class="dropdown dropdown-end">
+          <button
+            class="btn btn-outline border-slate-900 w-48 h-full flex justify-start pl-2 bg-base-300"
+          >
+            <div v-if="selectedGuild.image" class="avatar">
+              <div class="w-10 rounded-full">
+                <img :src="selectedGuild.image" />
+              </div>
+            </div>
+            <div class="pl-2 pr-4">
+              {{ selectedGuild.name ? selectedGuild.name : 'Select a Server' }}
+            </div>
+          </button>
+          <ul
+            tabindex="0"
+            class="mt-3 p-2 shadow menu menu-compact dropdown-content bg-base-100 rounded-box w-52"
+          >
+            <li
+              v-for="(guild, i) in guildsWithBoat"
+              :key="i"
+              @click="selectGuild(guild)"
+            >
+              <a>
+                <div class="avatar">
+                  <div class="w-10 rounded-full">
+                    <img :src="guild.image" />
+                  </div>
+                </div>
+                <div class="pl-2 pr-4">{{ guild.name }}</div>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div v-else-if="user.id">
+        Invite FredBoat to your server to use this site
+      </div>
       <div v-if="user.id !== ''" class="dropdown dropdown-end">
-        <button class="btn gap-2 profile-btn">
+        <button class="btn gap-2 profile-btn bg-base-300">
           <div class="avatar">
             <div class="w-10 rounded-full">
               <img
-                src="https://cdn.discordapp.com/avatars/200809303907631104/6aa5a9086caef0080e8071e5e688c749.png"
+                :src="`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`"
               />
             </div>
           </div>
@@ -21,7 +59,6 @@
           class="mt-3 p-2 shadow menu menu-compact dropdown-content bg-base-100 rounded-box w-52"
         >
           <li @click="logout"><a>Logout</a></li>
-          <li><a>My Servers</a></li>
         </ul>
       </div>
       <div v-else>
@@ -34,12 +71,24 @@
 <script setup lang="ts">
 import xwing from '@/assets/x-wing.svg';
 import { useUserStore } from '@/stores/user';
+import { useWebsocketStore } from '@/stores/websocket';
 import { useRouter } from 'vue-router';
+import { computed, ref, watchEffect } from 'vue';
+import type { Ref } from 'vue';
 
 const user = useUserStore();
+const socket = useWebsocketStore();
+console.log('user.guilds', user.guilds);
 const router = useRouter();
 
+function selectGuild(guild: Guild) {
+  (document?.activeElement as HTMLElement).blur();
+  selectedGuild.value = guild;
+  localStorage.guild = JSON.stringify(selectedGuild.value);
+  user.selectedGuild = guild.id;
+}
 function login() {
+  user.isLoading = true;
   window.open(
     `https://discord.com/oauth2/authorize?` +
       `response_type=code&` +
@@ -56,9 +105,29 @@ function logout() {
   localStorage.clear();
   router.replace('/');
 }
+
+const guildsWithBoat = computed(() => {
+  return user.guilds.filter(g => {
+    return user.guildsWithBoat.includes(g.id);
+  });
+});
+const selectedGuild: Ref<Guild | Record<string, never>> = ref(
+  localStorage.guild && localStorage.guild !== undefined
+    ? JSON.parse(localStorage.guild)
+    : {}
+);
+
+watchEffect(() => {
+  if (user.id && selectedGuild.value.id !== '' && socket.socket === undefined) {
+    socket.openWebsocket(selectedGuild.value.id);
+  }
+});
 </script>
 
 <style scoped>
+.navbar {
+  background: rgb(32, 32, 32);
+}
 .profile-btn {
   border-width: 1px;
   border-radius: 30px;

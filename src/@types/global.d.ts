@@ -16,3 +16,18 @@ type Token = {
   scope: string;
   token_type: string;
 };
+
+type Song = {
+  addedBy: string;
+  avatar: string;
+  thumbnail: string;
+  title: string;
+  artist: string;
+  duration: number;
+  durationTime: string;
+  link: string;
+  source: string;
+  _id: string;
+};
+
+type Queue = Song[];

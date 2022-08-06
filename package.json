@@ -9,10 +9,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@vueform/slider": "github:Yoduh/slider#cb5c263ca75c3fdcacef0b1497cbbe632e02c92a",
     "axios": "^0.27.2",
     "daisyui": "^2.20.0",
+    "just-throttle": "^4.0.1",
     "pinia": "^2.0.17",
     "vue": "^3.2.37",
+    "vue-material-design-icons": "^5.1.2",
     "vue-router": "4"
   },
   "devDependencies": {

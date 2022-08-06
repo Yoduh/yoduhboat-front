@@ -12,9 +12,7 @@ import axios from 'axios';
 const route = useRoute();
 const router = useRouter();
 const user = useUserStore();
-console.log('in authhandler');
 if (route.query.code) {
-  console.log('code', route.query.code);
   axios
     .post(`${import.meta.env.VITE_API}/getToken?code=${route.query.code}`)
     .then(res => {
@@ -25,6 +23,7 @@ if (route.query.code) {
       console.log('eeee', e);
     })
     .finally(() => {
+      user.isLoading = false;
       router.replace('/');
     });
 }

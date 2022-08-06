@@ -1,20 +1,25 @@
 <template>
-  <div>
-    <div class="container mx-auto pt-10">
-      <div class="grid grid-rows-4">
-        <div class="queue-header">
-          <button class="btn btn-outline btn-secondary mx-3">Queue</button>
-          <button class="btn btn-ghost mx-3">Search</button>
-        </div>
-      </div>
-    </div>
+  <!-- container mx-auto  -->
+  <div class="queue w-full divide-y divide-solid divide-emerald-800">
+    <QueueCard
+      v-for="(song, i) in queue.songs"
+      :key="i"
+      :song="song"
+      class="p-3 basis-1/4"
+      :class="{ 'bg-yoduh-green-1': i == 0 }"
+      @remove="remove(song, i)"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { useQueueStore } from '@/stores/queue';
+import QueueCard from './QueueCard.vue';
+const queue = useQueueStore();
 
-const isActive = ref(true);
+function remove(song: Song, idx: number) {
+  queue.removeSong(song, idx);
+}
 </script>
 
 <style scoped></style>

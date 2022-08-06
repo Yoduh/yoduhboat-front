@@ -4,6 +4,14 @@ import router from '@/router';
 import './style.css';
 import App from './App.vue';
 
+// material icons
+// https://github.com/robcresswell/vue-material-design-icons
+// https://materialdesignicons.com/
+
+// slider
+// https://github.com/vueform/slider
+// https://refreshless.com/nouislider/behaviour-option/
+
 const pinia = createPinia();
 const app = createApp(App);
 
