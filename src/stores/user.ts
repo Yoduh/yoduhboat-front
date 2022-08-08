@@ -7,6 +7,8 @@ import { api } from '@/plugins/api';
 export const useUserStore = defineStore({
   id: 'user',
   state: () => ({
+    voiceChannel: '',
+    botChannel: {} as { id: string; name: string },
     isLoading: false,
     access_token: '',
     expires_in: 0,
@@ -23,6 +25,12 @@ export const useUserStore = defineStore({
   getters: {
     getUserGuildIds(state) {
       return state.guilds.map(g => g.id);
+    },
+    validVoiceState(state) {
+      return (
+        state.voiceChannel &&
+        (!state.botChannel || state.voiceChannel === state.botChannel.id)
+      );
     }
   },
   actions: {

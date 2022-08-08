@@ -43,18 +43,22 @@ export function useStopwatch() {
   }
 
   // time in ms
-  function setTime(time: number) {
-    timeBegan = new Date();
+  function setTime(time: number, stopTime?: Date) {
+    // stopTime ? console.log('stopTime given', stopTime) : console.log('nil');
     stoppedDuration = 0;
-    timeStopped = null;
+    timeStopped = stopTime ? stopTime : null;
     timeBegan = new Date(Date.now() - time);
     clockRunning();
   }
 
   function clockRunning() {
     const currentTime = new Date();
+    // console.log('currentTime.getTime()', currentTime.getTime());
+    // console.log('timeBegan.getTime()', timeBegan!.getTime());
+    // console.log('stoppedDuration', stoppedDuration);
     timeInMS.value =
       currentTime.getTime() - timeBegan!.getTime() - stoppedDuration;
+    // console.log('timeInMS inside stopwatch:', timeInMS.value);
     const timeElapsed = new Date(timeInMS.value),
       hour = timeElapsed.getUTCHours(),
       min = timeElapsed.getUTCMinutes(),

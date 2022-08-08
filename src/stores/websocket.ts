@@ -12,6 +12,7 @@ export const useWebsocketStore = defineStore({
   actions: {
     openWebsocket(guildId: string) {
       const user = useUserStore();
+      const queue = useQueueStore();
       this.socket = new WebSocket(
         `${import.meta.env.VITE_WSS}?userId=${user.id}`
       );
@@ -27,9 +28,9 @@ export const useWebsocketStore = defineStore({
         clearInterval(this.interval);
         this.socket = undefined;
         console.log('socket CLOSED', this.socket);
+        queue.$reset();
       };
 
-      const queue = useQueueStore();
       this.socket.onmessage = e => {
         const response = this.serverResponse(e.data);
         if (response === 'pong') {
@@ -39,6 +40,16 @@ export const useWebsocketStore = defineStore({
         for (const key in response) {
           if (key === 'userId') continue;
           switch (key) {
+            case 'botVoiceChannel':
+              console.log('botVoiceId', response.botVoiceChannel);
+              user.botChannel = response.botVoiceChannel;
+              break;
+            case 'userVoiceId':
+              user.voiceChannel = response.userVoiceId;
+              break;
+            case 'stopped':
+              queue.$reset();
+              break;
             case 'isPlaying':
               queue.isPlaying = response.isPlaying;
               break;
@@ -56,7 +67,7 @@ export const useWebsocketStore = defineStore({
               break;
             case 'playTime':
               console.log('playTime from server: ', response.playTime);
-              if (response.userId !== user.id) {
+              if (response?.userId !== user.id) {
                 // don't update client who made the original request
                 queue.setPlayTime(response.playTime, false);
               }

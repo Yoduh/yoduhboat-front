@@ -31,13 +31,29 @@ export const useQueueStore = defineStore({
     },
     removeSong(song: Song, index: number) {
       this.songs.splice(index, 1);
+      if (index === 0) this.playTime = 0;
       const user = useUserStore();
       // backend queue removal uses 1-based indexing instead of zero (for REASONS)
       index++;
-      api.post(`/remove`, {
-        guild: user.selectedGuild,
-        songId: song._id
-      });
+      this.ignoreSync = true;
+      api
+        .post(`/remove`, {
+          guild: user.selectedGuild,
+          songId: song._id
+        })
+        .finally(() => (this.ignoreSync = false));
+    },
+    addSong(url: string) {
+      const user = useUserStore();
+      api
+        .post('/addSong', {
+          user: user.id,
+          guild: user.selectedGuild,
+          url: url
+        })
+        .then(res => {
+          this.songs.push(res.data.song);
+        });
     },
     togglePause() {
       this.isPaused = !this.isPaused;
@@ -60,6 +76,7 @@ export const useQueueStore = defineStore({
         .finally(() => (this.ignoreSync = false));
     },
     doneSong(song: Song) {
+      console.log('done song!');
       if (this.songs[0] && this.songs[0]._id === song._id) {
         this.songs.shift();
       }

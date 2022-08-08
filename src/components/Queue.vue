@@ -1,5 +1,4 @@
 <template>
-  <!-- container mx-auto  -->
   <div class="queue w-full divide-y divide-solid divide-emerald-800">
     <QueueCard
       v-for="(song, i) in queue.songs"

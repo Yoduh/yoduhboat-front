@@ -4,8 +4,9 @@
     class="footer p-5 flex justify-between items-center"
     style="height: 150px; min-height: 150px"
   >
+    <!-- AND if user.botChannel && user.voiceChannel !== user.botChannel.id    ...new user.state var for 'activeConnection' true/false-->
     <div
-      v-if="queue.songs.length > 0"
+      v-if="queue.songs.length > 0 && user.validVoiceState"
       class="song-info flex items-stretch w-auto"
     >
       <div class="thumbnail">
@@ -109,12 +110,14 @@ import Repeat from 'vue-material-design-icons/Repeat.vue';
 import { computed, ref, watch } from 'vue';
 import { useQueueStore } from '@/stores/queue.js';
 import { useUserStore } from '@/stores/user.js';
+import { useWebsocketStore } from '@/stores/websocket';
 import Slider from '@vueform/slider';
 import { useStopwatch } from '@/composables/stopwatch.js';
 import throttle from 'just-throttle';
 
 const user = useUserStore();
 const queue = useQueueStore();
+const wss = useWebsocketStore();
 const playingSong = computed(() => {
   return queue.songs[0];
 });
@@ -122,24 +125,44 @@ const playingSong = computed(() => {
 const isDisabled = computed(() => {
   return queue?.songs?.length === 0;
 });
+// reset and disable controls if user leaves voice chat
+watch(
+  () => user.validVoiceState,
+  validVoiceState => {
+    if (!validVoiceState) {
+      queue.$reset();
+      resetTimer();
+      console.log('no voice state, clear interval', handle);
+      clearInterval(handle);
+    } else {
+      wss.socket?.send('rejoin');
+      console.log('valid voice state entered, requesting queue details');
+    }
+  }
+);
+// toggle pause if server issues a pause command
 watch(
   () => queue.isPaused,
   isPaused => {
     if (isPaused) {
       clearInterval(handle);
       stopTimer();
-    } else {
+    } else if (queue.isPlaying) {
       startTimer();
       clearInterval(handle);
       handle = setInterval(updateSlider, 100);
+      console.log('isPaused watch handle', handle);
     }
   }
 );
+// update slider position based on server command
 watch(
   () => queue.playTime,
   playTime => {
-    console.log('playTime updated, setting slider');
-    setSlider(playTime, false);
+    if (user.validVoiceState) {
+      console.log('playTime updated, setting slider');
+      setSlider(playTime, false, queue.isPaused ? new Date() : undefined);
+    }
   }
 );
 
@@ -165,16 +188,20 @@ const updateSlider = () => {
 const throttledSeek = throttle(newTime => queue.seek(newTime), 100, {
   leading: true
 });
-const setSlider = (newTime: number, andSeek: boolean) => {
+const setSlider = (newTime: number, andSeek: boolean, stopTime?: Date) => {
+  console.log('setSlider called');
   if (andSeek) {
     throttledSeek(newTime);
   }
-  setTime(newTime);
+  setTime(newTime, stopTime);
   updateSlider();
-  if (!queue.isPaused) {
+  if (!queue.isPaused && queue.songs.length > 0) {
     startTimer();
-    clearInterval(handle);
-    handle = setInterval(updateSlider, 100);
+    if (!handle) handle = setInterval(updateSlider, 100);
+    // instead of the if^
+    // clearInterval(handle);
+    // handle = setInterval(updateSlider, 100);
+    console.log('setSlider handle', handle);
   }
 };
 const startDrag = () => {
@@ -224,21 +251,28 @@ const msToTime = (msTime: number) => {
 };
 
 watch(playingSong, (newSong, oldSong) => {
+  console.log('playingSong old', oldSong);
+  console.log('playingSong new', newSong);
   // disable the player if no more songs in the queue
   if (!newSong && oldSong) {
     resetTimer();
     clearInterval(handle);
-    return;
   }
   // reset playback bar when new song starts (reset handle position, reset timer, start handle and timer IF not paused)
-  if (newSong._id !== oldSong?._id) {
+  else if (oldSong && newSong._id !== oldSong._id) {
     console.log('new song!');
-    // new song is only reported once player is playing (skipping while paused needs to be looked at)
-    setSlider(0, false);
+    // new song is only reported once player is playing
+    setSlider(0, false, queue.isPaused ? new Date() : undefined);
+  }
+  // set initial playback position based on server time, this can be non-zero when rejoining the bot channel
+  else if (!oldSong) {
+    console.log('setting initial position!');
+    setSlider(queue.playTime, false, new Date());
   }
 });
 
-if (queue.isPlaying) {
+if (queue.isPlaying && user.validVoiceState) {
+  console.log('onCreate setSlider');
   setSlider(queue.playTime, false);
 }
 </script>

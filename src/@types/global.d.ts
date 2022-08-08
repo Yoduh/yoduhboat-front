@@ -30,4 +30,21 @@ type Song = {
   _id: string;
 };
 
+type YoutubeResult = {
+  durationInSec: number;
+  durationRaw: string;
+  id: string;
+  thumbnails: [
+    {
+      url: string;
+      width: number;
+      height: number;
+    }
+  ];
+  title: string;
+  url: string;
+  channel: Record<string, unknown>;
+  added: boolean;
+};
+
 type Queue = Song[];
