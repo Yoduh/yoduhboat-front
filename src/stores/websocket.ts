@@ -13,22 +13,24 @@ export const useWebsocketStore = defineStore({
     openWebsocket(guildId: string) {
       const user = useUserStore();
       const queue = useQueueStore();
+      console.log(
+        'opening websocket with id',
+        user.id ? user.id : localStorage.id
+      );
+      if (this.socket) this.socket.close();
       this.socket = new WebSocket(
-        `${import.meta.env.VITE_WSS}?userId=${user.id}`
+        `${import.meta.env.VITE_WSS}?userId=${
+          user.id ? user.id : localStorage.id
+        }`
       );
       this.socket.onopen = () => {
         const guild = JSON.stringify({ guild: guildId });
+        console.log('sending socket guild', guild);
         this.socket?.send(guild);
         this.missedHeartbeats = 0;
         this.interval = setInterval(() => this.ping(), 5000);
         // set interval to ping server every 5 seconds.  count 3 misses before closing connection and clearing queue / disabling player
         // (modal: "discord bot may be down, try refreshing player").  if cant open connection, home page should display "can't connect, bot is probably down. try again later"
-      };
-      this.socket.onclose = () => {
-        clearInterval(this.interval);
-        this.socket = undefined;
-        console.log('socket CLOSED', this.socket);
-        queue.$reset();
       };
 
       this.socket.onmessage = e => {
@@ -66,15 +68,16 @@ export const useWebsocketStore = defineStore({
               queue.doneSong(response.doneSong);
               break;
             case 'playTime':
-              console.log('playTime from server: ', response.playTime);
-              if (response?.userId !== user.id) {
-                // don't update client who made the original request
-                queue.setPlayTime(response.playTime, false);
+              console.log('received playTime from server', response.playTime);
+              if (queue.isPaused) {
+                console.log('IGNORING WHILE PAUSED');
+                break;
               }
-              break;
-            case 'sync':
-              console.log('received sync from server', response.sync);
               queue.setPlayTime(response.playTime, true);
+              break;
+            case 'initialTime':
+              console.log('initialTime from server', response.initialTime);
+              queue.setPlayTime(response.initialTime, true);
               break;
             default:
               console.log(
@@ -101,6 +104,8 @@ export const useWebsocketStore = defineStore({
         this.socket?.close();
         clearInterval(this.interval);
         this.socket = undefined;
+        const queue = useQueueStore();
+        queue.$reset();
       }
     }
   }

@@ -133,7 +133,7 @@ watch(
       queue.$reset();
       resetTimer();
       console.log('no voice state, clear interval', handle);
-      clearInterval(handle);
+      clearHandle();
     } else {
       wss.socket?.send('rejoin');
       console.log('valid voice state entered, requesting queue details');
@@ -145,22 +145,25 @@ watch(
   () => queue.isPaused,
   isPaused => {
     if (isPaused) {
-      clearInterval(handle);
+      clearHandle();
       stopTimer();
     } else if (queue.isPlaying) {
       startTimer();
-      clearInterval(handle);
+      clearHandle();
       handle = setInterval(updateSlider, 100);
       console.log('isPaused watch handle', handle);
     }
   }
 );
-// update slider position based on server command
+// playTime updates:
+// 1) anytime frontend receives a 'sync' update from server
+// 2) when frontend receives new song queue when current queue is empty, playTime = 0 in queue.ts
+// 3) when removing first song from queue, playTime = 0 in queue.ts
 watch(
   () => queue.playTime,
   playTime => {
     if (user.validVoiceState) {
-      console.log('playTime updated, setting slider');
+      console.log('playTime updated, setting slider', playTime);
       setSlider(playTime, false, queue.isPaused ? new Date() : undefined);
     }
   }
@@ -177,7 +180,7 @@ const {
   formatTime
 } = useStopwatch();
 const slider = ref(0);
-let handle: ReturnType<typeof setInterval>;
+let handle: ReturnType<typeof setInterval> | null;
 const sliderOptions = {
   connect: 'lower'
 };
@@ -192,21 +195,23 @@ const setSlider = (newTime: number, andSeek: boolean, stopTime?: Date) => {
   console.log('setSlider called');
   if (andSeek) {
     throttledSeek(newTime);
+    updateSlider();
+    // pause timer and handle: server needs time to seek. next sync will start timer/handle again in time with music
+    clearHandle();
+    stopTimer();
+    return;
   }
   setTime(newTime, stopTime);
   updateSlider();
   if (!queue.isPaused && queue.songs.length > 0) {
     startTimer();
     if (!handle) handle = setInterval(updateSlider, 100);
-    // instead of the if^
-    // clearInterval(handle);
-    // handle = setInterval(updateSlider, 100);
     console.log('setSlider handle', handle);
   }
 };
 const startDrag = () => {
   console.log('START DRAG: stop updating handle', handle);
-  clearInterval(handle);
+  clearHandle();
   stopTimer();
 };
 const endDrag = () => {
@@ -218,7 +223,7 @@ const slideSlider = (clickedTime: number) => {
 };
 
 const shuffle = () => {
-  console.log('shuffle');
+  queue.shuffle();
 };
 
 const rewind = () => {
@@ -226,7 +231,7 @@ const rewind = () => {
 };
 
 const play = () => {
-  queue.togglePause();
+  queue.togglePause(slider.value);
 };
 
 const pause = () => {
@@ -256,7 +261,9 @@ watch(playingSong, (newSong, oldSong) => {
   // disable the player if no more songs in the queue
   if (!newSong && oldSong) {
     resetTimer();
-    clearInterval(handle);
+    console.log('playingSong clear handle', handle);
+    clearHandle();
+    console.log('handle after', handle);
   }
   // reset playback bar when new song starts (reset handle position, reset timer, start handle and timer IF not paused)
   else if (oldSong && newSong._id !== oldSong._id) {
@@ -264,17 +271,22 @@ watch(playingSong, (newSong, oldSong) => {
     // new song is only reported once player is playing
     setSlider(0, false, queue.isPaused ? new Date() : undefined);
   }
-  // set initial playback position based on server time, this can be non-zero when rejoining the bot channel
+  // set initial playback position when joining voice with song in progress
   else if (!oldSong) {
     console.log('setting initial position!');
-    setSlider(queue.playTime, false, new Date());
+    setSlider(queue.playTime, false, queue.isPaused ? new Date() : undefined);
   }
 });
 
 if (queue.isPlaying && user.validVoiceState) {
   console.log('onCreate setSlider');
-  setSlider(queue.playTime, false);
+  setSlider(queue.playTime, false, queue.isPaused ? new Date() : undefined);
 }
+
+const clearHandle = () => {
+  if (handle) clearInterval(handle);
+  handle = null;
+};
 </script>
 
 <style src="@vueform/slider/themes/default.css" />
@@ -309,6 +321,9 @@ if (queue.isPlaying && user.validVoiceState) {
   color: rgb(186, 186, 186);
   &:hover {
     color: white;
+  }
+  &:active {
+    transform: scale(1.1);
   }
   &:disabled {
     color: rgb(186, 186, 186, 0.2);

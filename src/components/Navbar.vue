@@ -73,7 +73,7 @@ import xwing from '@/assets/x-wing.svg';
 import { useUserStore } from '@/stores/user';
 import { useWebsocketStore } from '@/stores/websocket';
 import { useRouter } from 'vue-router';
-import { computed, ref, watchEffect } from 'vue';
+import { computed, ref } from 'vue';
 import type { Ref } from 'vue';
 
 const user = useUserStore();
@@ -83,11 +83,15 @@ const router = useRouter();
 
 function selectGuild(guild: Guild) {
   (document?.activeElement as HTMLElement).blur();
+  if (guild.id !== selectedGuild.value.id) {
+    console.log('changing guild');
+    socket.openWebsocket(guild.id);
+  }
   selectedGuild.value = guild;
   localStorage.guild = JSON.stringify(selectedGuild.value);
   user.selectedGuild = guild.id;
 }
-function login() {
+function login(): void {
   user.isLoading = true;
   window.open(
     `https://discord.com/oauth2/authorize?` +
@@ -100,7 +104,7 @@ function login() {
     `_self`
   );
 }
-function logout() {
+function logout(): void {
   user.$reset();
   localStorage.clear();
   router.replace('/');
@@ -116,12 +120,6 @@ const selectedGuild: Ref<Guild | Record<string, never>> = ref(
     ? JSON.parse(localStorage.guild)
     : {}
 );
-
-watchEffect(() => {
-  if (user.id && selectedGuild.value.id !== '' && socket.socket === undefined) {
-    socket.openWebsocket(selectedGuild.value.id);
-  }
-});
 </script>
 
 <style scoped>

@@ -27,6 +27,9 @@ export const useQueueStore = defineStore({
   },
   actions: {
     setQueue(newQueue: Queue) {
+      if (this.songs.length === 0) {
+        this.playTime = 0;
+      }
       this.songs = newQueue;
     },
     removeSong(song: Song, index: number) {
@@ -45,35 +48,34 @@ export const useQueueStore = defineStore({
     },
     addSong(url: string) {
       const user = useUserStore();
-      api
-        .post('/addSong', {
-          user: user.id,
-          guild: user.selectedGuild,
-          url: url
-        })
-        .then(res => {
-          this.songs.push(res.data.song);
-        });
+      api.post('/addSong', {
+        user: user.id,
+        guild: user.selectedGuild,
+        url: url
+      });
     },
-    togglePause() {
+    togglePause(sliderValue: number) {
       this.isPaused = !this.isPaused;
       const user = useUserStore();
-      console.log('calling pause');
+      console.log('calling pause', sliderValue);
       api.post(`/pause`, {
-        guild: user.selectedGuild
+        guild: user.selectedGuild,
+        seekTime: sliderValue
       });
     },
     seek(seekTime: number) {
       console.log('queue.seek');
       const user = useUserStore();
-      // ignore any incoming (stale) sync attempts until player is completely done with the seek operation
-      this.ignoreSync = true;
-      api
-        .post(`/seek`, {
-          guild: user.selectedGuild,
-          seekTime: seekTime
-        })
-        .finally(() => (this.ignoreSync = false));
+      api.post(`/seek`, {
+        guild: user.selectedGuild,
+        seekTime: seekTime
+      });
+    },
+    shuffle() {
+      const user = useUserStore();
+      api.post(`/shuffle`, {
+        guild: user.selectedGuild
+      });
     },
     doneSong(song: Song) {
       console.log('done song!');
@@ -81,10 +83,11 @@ export const useQueueStore = defineStore({
         this.songs.shift();
       }
       if (this.songs.length === 0) {
-        this.isPlaying = false;
+        this.$reset();
       }
     },
     setPlayTime(newTime: number, fromHeartBeat: boolean) {
+      console.log('queue.setPlayTime()');
       this.fromHeartBeat = fromHeartBeat;
       if (!this.ignoreSync) this.playTime = newTime;
       else console.log('received sync, but currently ignoring...');

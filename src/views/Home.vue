@@ -1,14 +1,21 @@
 <template>
-  <div v-if="user.isLoading">Loading...</div>
+  <div v-if="!user || !user.id"></div>
+  <div v-else-if="user.isLoading">Loading...</div>
   <div v-else-if="user.guildsWithBoat.length === 0">
     You have no Discord servers with YoduhBoat. Try inviting YoduhBoat to a
     server then refreshing this page
   </div>
   <div
+    v-else-if="!user.selectedGuild || user.selectedGuild === ''"
+    class="h-full flex items-center justify-center text-2xl"
+  >
+    Select a server up top
+  </div>
+  <div
     v-else-if="!user.botChannel && !user.voiceChannel"
     class="h-full flex items-center justify-center text-2xl"
   >
-    Please join any voice channel to begin
+    Please join any voice channel on to begin
   </div>
   <div
     v-else-if="user.botChannel && user.voiceChannel !== user.botChannel.id"
