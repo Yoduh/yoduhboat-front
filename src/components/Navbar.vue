@@ -41,7 +41,7 @@
         </div>
       </div>
       <div v-else-if="user.id">
-        Invite FredBoat to your server to use this site
+        Invite the music bot to your server to use this site
       </div>
       <div v-if="user.id !== ''" class="dropdown dropdown-end">
         <button class="btn gap-2 profile-btn bg-base-300">
