@@ -16,11 +16,10 @@ if (route.query.code) {
   axios
     .post(`${import.meta.env.VITE_API}/getToken?code=${route.query.code}`)
     .then(res => {
-      console.log('setting token', res.data);
       user.setToken(res.data);
     })
     .catch(e => {
-      console.log('eeee', e);
+      console.log('auth error', e);
     })
     .finally(() => {
       user.isLoading = false;

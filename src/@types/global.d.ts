@@ -45,6 +45,34 @@ type YoutubeResult = {
   url: string;
   channel: Record<string, unknown>;
   added: boolean;
+  addedNext: boolean;
+};
+
+type YoutubePlaylist = {
+  durationInSec: number;
+  durationRaw: string;
+  id: string;
+  count: number;
+  songs: YoutubeResult[];
+  thumbnail: {
+    url: string;
+    width: number;
+    height: number;
+  };
+  title: string;
+  url: string;
+  channel: Record<string, unknown>;
+  added: boolean;
+  addedNext: boolean;
 };
 
 type Queue = Song[];
+
+type Playlist = {
+  id: string;
+  name: string;
+  songsNum: number;
+  duration: string;
+  createdBy: string;
+  songs?: Song[];
+};

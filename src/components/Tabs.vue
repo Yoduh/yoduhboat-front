@@ -1,50 +1,71 @@
 <template>
   <div>
-    <div class="tabs my-4">
+    <div class="tabs my-4 flex justify-content-start">
       <button
-        class="btn btn-outline btn-secondary mx-3"
-        @click="activateSearch(false)"
+        role="tab"
+        class="btn btn-ghost mx-3"
+        :class="{ activeTab: activeTab === '' }"
+        @click="activateTab('')"
       >
         Queue
       </button>
       <button
         v-if="!isSearching"
+        role="tab"
         class="btn btn-ghost mx-3"
-        @click="activateSearch(true)"
+        @click="activateTab('search')"
       >
         Search
       </button>
-      <div v-else class="flex items-center search-container">
+      <div v-else class="flex items-center search-container" role="tab">
         <Youtube class="yt flex items-center" fill-color="#FF0000" />
         <input
+          ref="searchInput"
           v-model="searchText"
           type="text"
-          placeholder="Search here"
+          placeholder="Search YouTube"
           class="search w-full max-w-xs"
           @keyup="search"
         />
       </div>
+      <button
+        role="tab"
+        :disabled="user.selectedGuild === ''"
+        class="btn btn-ghost mx-3"
+        :class="{ activeTab: activeTab === 'playlists' }"
+        @click="activateTab('playlists')"
+      >
+        Playlists
+      </button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { nextTick, ref, watch } from 'vue';
 import Youtube from 'vue-material-design-icons/Youtube.vue';
 import { api } from '@/plugins/api';
 import { useSearchStore } from '@/stores/search';
+import { useUserStore } from '@/stores/user';
+import { useRoute } from 'vue-router';
 
-const isSearching = ref(false);
+const user = useUserStore();
+const route = useRoute();
+const isSearching = ref(route.name === 'Search');
 const searchText = ref('');
-const emit = defineEmits(['select']);
+const emit = defineEmits(['selectTab']);
 const searchStore = useSearchStore();
 
-function activateSearch(tab: boolean) {
-  isSearching.value = tab;
-  if (tab) {
+const activeTab = ref('');
+function activateTab(tab: string) {
+  activeTab.value = tab;
+  if (tab === 'search') {
+    isSearching.value = true;
     searchStore.resetAdditions();
+  } else {
+    isSearching.value = false;
   }
-  emit('select', isSearching.value);
+  emit('selectTab', tab);
 }
 async function search(e: KeyboardEvent) {
   if (e.key === 'Enter') {
@@ -53,9 +74,22 @@ async function search(e: KeyboardEvent) {
     });
   }
 }
+
+const searchInput = ref();
+watch(isSearching, newVal => {
+  if (newVal) {
+    nextTick(() => {
+      searchInput.value.focus();
+    });
+  }
+});
 </script>
 
 <style lang="scss" scoped>
+.activeTab {
+  background-color: green;
+  color: #eee;
+}
 .yt {
   height: 3rem;
   padding-left: 1rem;

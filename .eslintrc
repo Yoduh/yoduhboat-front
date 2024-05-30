@@ -8,15 +8,14 @@
   "extends": [
     "plugin:vue/vue3-recommended",
     "eslint:recommended",
-    "@vue/typescript/recommended",
+    // "@vue/typescript/recommended",
+    "@vue/eslint-config-typescript",
+    "@vue/eslint-config-prettier/skip-formatting",
     "prettier"
   ],
   "parserOptions": {
       "ecmaVersion": 2021
   },
-  "plugins": [
-    "prettier"
-  ],
   "rules": {
     "no-unused-expressions": "off",
     // https://github.com/typescript-eslint/typescript-eslint/blob/main/docs/linting/TROUBLESHOOTING.md#i-get-errors-from-the-no-undef-rule-about-global-variables-not-being-defined-even-though-there-are-no-typescript-errors

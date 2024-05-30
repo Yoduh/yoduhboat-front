@@ -1,5 +1,5 @@
 <template>
-  <div class="navbar z-40">
+  <div id="nav" class="navbar z-40">
     <div class="flex-1">
       <img :src="xwing" class="h-6 w-20" />
       <a class="btn btn-ghost normal-case text-3xl p-0 ml-3">YoduhBoat</a>
@@ -31,7 +31,7 @@
               <a>
                 <div class="avatar">
                   <div class="w-10 rounded-full">
-                    <img :src="guild.image" />
+                    <img :src="guild.image ?? defaultImage" />
                   </div>
                 </div>
                 <div class="pl-2 pr-4">{{ guild.name }}</div>
@@ -69,22 +69,23 @@
 </template>
 
 <script setup lang="ts">
+import defaultImage from '@/assets/discord-logo.png';
 import xwing from '@/assets/x-wing.svg';
 import { useUserStore } from '@/stores/user';
 import { useWebsocketStore } from '@/stores/websocket';
 import { useRouter } from 'vue-router';
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import type { Ref } from 'vue';
+import { usePlaylistStore } from '@/stores/playlist';
 
 const user = useUserStore();
 const socket = useWebsocketStore();
-console.log('user.guilds', user.guilds);
+const playlists = usePlaylistStore();
 const router = useRouter();
 
 function selectGuild(guild: Guild) {
   (document?.activeElement as HTMLElement).blur();
   if (guild.id !== selectedGuild.value.id) {
-    console.log('changing guild');
     socket.openWebsocket(guild.id);
   }
   selectedGuild.value = guild;
@@ -120,6 +121,9 @@ const selectedGuild: Ref<Guild | Record<string, never>> = ref(
     ? JSON.parse(localStorage.guild)
     : {}
 );
+watch(selectedGuild, newGuild => {
+  playlists.getPlaylistsForGuild(newGuild.id);
+});
 </script>
 
 <style scoped>

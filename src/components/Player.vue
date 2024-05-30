@@ -1,15 +1,16 @@
 <template>
   <footer
     v-if="user.id"
-    class="footer p-5 flex justify-between items-center"
+    class="footer p-5 flex justify-start items-center"
     style="height: 150px; min-height: 150px"
   >
     <!-- AND if user.botChannel && user.voiceChannel !== user.botChannel.id    ...new user.state var for 'activeConnection' true/false-->
     <div
       v-if="queue.songs.length > 0 && user.validVoiceState"
-      class="song-info flex items-stretch w-auto"
+      id="songInfo"
+      class="song-info flex items-stretch w-1/4 lg:w-1/5"
     >
-      <div class="thumbnail">
+      <div class="thumbnail hidden xl:block">
         <img :src="playingSong.thumbnail" width="200" height="200" />
       </div>
       <div class="flex flex-col justify-around w-full">
@@ -35,19 +36,22 @@
     </div>
     <div v-else class="text-lg">No Music Playing</div>
     <div
-      class="controls w-full flex flex-col items-center justify-center h-full"
+      id="playback"
+      class="controls flex flex-col items-center justify-center h-full w-full lg:w-4/5 xl:w-3/5"
     >
       <div class="button-row flex pb-2">
-        <button
-          class="mx-2 control-btn"
-          :disabled="isDisabled"
-          @click="shuffle"
-        >
-          <ShuffleVariant :size="30" />
-        </button>
-        <button class="mx-2 control-btn" :disabled="isDisabled" @click="rewind">
+        <div class="tooltip flex" data-tip="Shuffle">
+          <button
+            class="mx-2 control-btn self-center"
+            :disabled="isDisabled"
+            @click="shuffle"
+          >
+            <ShuffleVariant :size="30" />
+          </button>
+        </div>
+        <!-- <button class="mx-2 control-btn" :disabled="isDisabled" @click="rewind">
           <SkipPrevious :size="40" />
-        </button>
+        </button> -->
         <button
           v-if="!queue.isPlaying || queue.isPaused"
           class="mx-2 play-btn"
@@ -64,16 +68,18 @@
         >
           <PauseCircle :size="50" />
         </button>
-        <button
-          class="mx-2 control-btn"
-          :disabled="isDisabled"
-          @click="skipNext"
-        >
-          <SkipNext :size="40" />
-        </button>
-        <button class="mx-2 control-btn" :disabled="isDisabled" @click="repeat">
+        <div class="tooltip flex" data-tip="Skip">
+          <button
+            class="mx-2 control-btn"
+            :disabled="isDisabled"
+            @click="skipNext"
+          >
+            <SkipNext :size="40" />
+          </button>
+        </div>
+        <!-- <button class="mx-2 control-btn" :disabled="isDisabled" @click="repeat">
           <Repeat :size="30" />
-        </button>
+        </button> -->
       </div>
       <div
         v-if="queue.songs.length > 0"
@@ -102,11 +108,11 @@
 
 <script setup lang="ts">
 import ShuffleVariant from 'vue-material-design-icons/ShuffleVariant.vue';
-import SkipPrevious from 'vue-material-design-icons/SkipPrevious.vue';
+// import SkipPrevious from 'vue-material-design-icons/SkipPrevious.vue';
 import PlayCircle from 'vue-material-design-icons/PlayCircle.vue';
 import PauseCircle from 'vue-material-design-icons/PauseCircle.vue';
 import SkipNext from 'vue-material-design-icons/SkipNext.vue';
-import Repeat from 'vue-material-design-icons/Repeat.vue';
+// import Repeat from 'vue-material-design-icons/Repeat.vue';
 import { computed, ref, watch } from 'vue';
 import { useQueueStore } from '@/stores/queue.js';
 import { useUserStore } from '@/stores/user.js';
@@ -132,11 +138,9 @@ watch(
     if (!validVoiceState) {
       queue.$reset();
       resetTimer();
-      console.log('no voice state, clear interval', handle);
       clearHandle();
     } else {
       wss.socket?.send('rejoin');
-      console.log('valid voice state entered, requesting queue details');
     }
   }
 );
@@ -151,7 +155,6 @@ watch(
       startTimer();
       clearHandle();
       handle = setInterval(updateSlider, 100);
-      console.log('isPaused watch handle', handle);
     }
   }
 );
@@ -163,7 +166,7 @@ watch(
   () => queue.playTime,
   playTime => {
     if (user.validVoiceState) {
-      console.log('playTime updated, setting slider', playTime);
+      // console.log('playTime updated, setting slider', playTime);
       setSlider(playTime, false, queue.isPaused ? new Date() : undefined);
     }
   }
@@ -186,13 +189,13 @@ const sliderOptions = {
 };
 const updateSlider = () => {
   slider.value = timeInMS.value;
-  console.log('update...', handle);
+  // console.log('update...', handle);
 };
 const throttledSeek = throttle(newTime => queue.seek(newTime), 100, {
   leading: true
 });
 const setSlider = (newTime: number, andSeek: boolean, stopTime?: Date) => {
-  console.log('setSlider called');
+  // console.log('setSlider called');
   if (andSeek) {
     throttledSeek(newTime);
     updateSlider();
@@ -206,19 +209,17 @@ const setSlider = (newTime: number, andSeek: boolean, stopTime?: Date) => {
   if (!queue.isPaused && queue.songs.length > 0) {
     startTimer();
     if (!handle) handle = setInterval(updateSlider, 100);
-    console.log('setSlider handle', handle);
+    // console.log('setSlider handle', handle);
   }
 };
 const startDrag = () => {
-  console.log('START DRAG: stop updating handle', handle);
   clearHandle();
   stopTimer();
 };
 const endDrag = () => {
-  console.log('END DRAG (also calls SET)');
+  // console.log('END DRAG (also calls SET)');
 };
 const slideSlider = (clickedTime: number) => {
-  console.log('SLIDING');
   msToTime(clickedTime);
 };
 
@@ -226,25 +227,25 @@ const shuffle = () => {
   queue.shuffle();
 };
 
-const rewind = () => {
-  console.log('rewind');
-};
+// const rewind = () => {
+//   console.log('rewind');
+// };
 
 const play = () => {
   queue.togglePause(slider.value);
 };
 
 const pause = () => {
-  queue.togglePause();
+  queue.togglePause(slider.value);
 };
 
 const skipNext = () => {
-  console.log('skipNext');
+  queue.removeSong(queue.songs[0], 0);
 };
 
-const repeat = () => {
-  console.log('repeat');
-};
+// const repeat = () => {
+//   console.log('repeat');
+// };
 
 const msToTime = (msTime: number) => {
   const timeElapsed = new Date(msTime),
@@ -256,30 +257,24 @@ const msToTime = (msTime: number) => {
 };
 
 watch(playingSong, (newSong, oldSong) => {
-  console.log('playingSong old', oldSong);
-  console.log('playingSong new', newSong);
   // disable the player if no more songs in the queue
   if (!newSong && oldSong) {
     resetTimer();
-    console.log('playingSong clear handle', handle);
     clearHandle();
-    console.log('handle after', handle);
   }
   // reset playback bar when new song starts (reset handle position, reset timer, start handle and timer IF not paused)
   else if (oldSong && newSong._id !== oldSong._id) {
-    console.log('new song!');
     // new song is only reported once player is playing
     setSlider(0, false, queue.isPaused ? new Date() : undefined);
   }
   // set initial playback position when joining voice with song in progress
   else if (!oldSong) {
-    console.log('setting initial position!');
     setSlider(queue.playTime, false, queue.isPaused ? new Date() : undefined);
   }
 });
 
 if (queue.isPlaying && user.validVoiceState) {
-  console.log('onCreate setSlider');
+  // console.log('onCreate setSlider');
   setSlider(queue.playTime, false, queue.isPaused ? new Date() : undefined);
 }
 

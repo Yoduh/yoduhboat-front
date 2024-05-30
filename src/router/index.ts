@@ -1,9 +1,5 @@
-import {
-  createRouter,
-  createWebHistory,
-  RouteLocationNormalized,
-  RouteRecordRaw
-} from 'vue-router';
+import { createRouter, createWebHistory } from 'vue-router';
+import type { RouteLocationNormalized, RouteRecordRaw } from 'vue-router';
 import Home from '@/views/Home.vue';
 import AuthHandler from '@/components/AuthHandler.vue';
 
@@ -18,7 +14,24 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
     name: 'Home',
-    component: Home
+    component: Home,
+    children: [
+      {
+        path: '',
+        name: 'Queue',
+        component: () => import('@/views/Queue.vue')
+      },
+      {
+        path: '/search',
+        name: 'Search',
+        component: () => import('@/views/Search.vue')
+      },
+      {
+        path: '/playlists',
+        name: 'Playlists',
+        component: () => import('@/views/Playlists.vue')
+      }
+    ]
   },
   {
     path: '/auth/redirect',

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { useUserStore } from './user';
+import { useWebsocketStore } from './websocket';
 import { api } from '@/plugins/api';
 
 export const useQueueStore = defineStore({
@@ -12,19 +13,6 @@ export const useQueueStore = defineStore({
     fromHeartBeat: false,
     ignoreSync: false
   }),
-  getters: {
-    getQueueSongTitle: state => {
-      return (songId: string) => {
-        const song: Song | undefined = state.songs.find(s => s._id === songId);
-        if (song) {
-          return song.artist
-            ? `${song.artist} - ${song.title}`
-            : `${song.title}`;
-        }
-        return undefined;
-      };
-    }
-  },
   actions: {
     setQueue(newQueue: Queue) {
       if (this.songs.length === 0) {
@@ -46,25 +34,38 @@ export const useQueueStore = defineStore({
         })
         .finally(() => (this.ignoreSync = false));
     },
-    addSong(url: string) {
+    addSong(songOrPlaylistUrl: string) {
       const user = useUserStore();
       api.post('/addSong', {
         user: user.id,
         guild: user.selectedGuild,
-        url: url
+        url: songOrPlaylistUrl
+      });
+    },
+    addSongNext(songOrPlaylistUrl: string) {
+      const user = useUserStore();
+      api.post('/addSongNext', {
+        user: user.id,
+        guild: user.selectedGuild,
+        url: songOrPlaylistUrl
       });
     },
     togglePause(sliderValue: number) {
       this.isPaused = !this.isPaused;
       const user = useUserStore();
-      console.log('calling pause', sliderValue);
       api.post(`/pause`, {
         guild: user.selectedGuild,
         seekTime: sliderValue
       });
     },
+    getServerUpdate() {
+      const ws = useWebsocketStore();
+      const user = useUserStore();
+      ws.socket?.send(
+        JSON.stringify({ sendPlayTime: true, guild: user.selectedGuild })
+      );
+    },
     seek(seekTime: number) {
-      console.log('queue.seek');
       const user = useUserStore();
       api.post(`/seek`, {
         guild: user.selectedGuild,
@@ -78,7 +79,6 @@ export const useQueueStore = defineStore({
       });
     },
     doneSong(song: Song) {
-      console.log('done song!');
       if (this.songs[0] && this.songs[0]._id === song._id) {
         this.songs.shift();
       }
@@ -87,10 +87,10 @@ export const useQueueStore = defineStore({
       }
     },
     setPlayTime(newTime: number, fromHeartBeat: boolean) {
-      console.log('queue.setPlayTime()');
+      // console.log('queue.setPlayTime()');
       this.fromHeartBeat = fromHeartBeat;
       if (!this.ignoreSync) this.playTime = newTime;
-      else console.log('received sync, but currently ignoring...');
+      //else console.log('received sync, but currently ignoring...');
     }
   }
 });

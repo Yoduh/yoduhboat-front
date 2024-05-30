@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
-import defaultImage from '../assets/discord-logo.png';
 // import { sortByKey } from '../helpers/util.js';
 import axios from 'axios';
+import { usePlaylistStore } from '@/stores/playlist';
 import { api } from '@/plugins/api';
 
 export const useUserStore = defineStore({
@@ -31,6 +31,15 @@ export const useUserStore = defineStore({
         state.voiceChannel &&
         (!state.botChannel || state.voiceChannel === state.botChannel.id)
       );
+    },
+    selectedGuildName(state): string {
+      if (this.selectedGuild) {
+        const guild = state.guilds.find(g => g.id === this.selectedGuild);
+        if (guild) return guild.name;
+        else return '';
+      } else {
+        return '';
+      }
     }
   },
   actions: {
@@ -39,13 +48,21 @@ export const useUserStore = defineStore({
       localStorage.token = JSON.stringify(token);
       return axios
         .post(`${import.meta.env.VITE_API}/setToken`, token)
-        .then(() => {
+        .then(dbUser => {
           this.access_token = token.access_token;
           this.expires_in = token.expires_in;
           this.refresh_token = token.refresh_token;
           this.scope = token.scope;
           this.token_type = token.token_type;
-          this.getUserDetails();
+          // this.getUserDetails();
+
+          localStorage.id = dbUser.data.userId;
+          this.id = dbUser.data.userId;
+          this.username = dbUser.data.username;
+          this.avatar = dbUser.data.avatar;
+          this.guilds = dbUser.data.guilds;
+          this.setUserGuilds();
+
           this.setInterceptor();
         })
         .catch(e => {
@@ -53,69 +70,31 @@ export const useUserStore = defineStore({
           this.isLoading = false;
         });
     },
-    getUserDetails() {
-      // fetch the user data
-      console.log('fetching user details');
-      return axios
-        .get('https://discordapp.com/api/users/@me', {
-          headers: { Authorization: `Bearer ${this.access_token}` }
-        })
-        .then(res => {
-          localStorage.id = res.data.id;
-          this.id = res.data.id;
-          this.username = res.data.username;
-          this.avatar = res.data.avatar;
-          // dispatch('guild/getSounds', null, { root: true });
-          // get current song info / queue instead
-        })
-        .catch(e => {
-          console.log('get user error', e);
-        })
-        .finally(() => {
-          this.getUserGuilds();
-        });
-    },
-    getUserGuilds() {
-      return axios
-        .get('https://discordapp.com/api/users/@me/guilds', {
-          headers: { Authorization: `Bearer ${this.access_token}` }
-        })
-        .then(res => {
-          const formattedGuilds = res.data.map((g: Guild) => {
-            let link = defaultImage;
-            if (g.icon) {
-              link = `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.jpg`;
+    setUserGuilds() {
+      axios
+        .post(
+          `${import.meta.env.VITE_API}/servers`,
+          {
+            guilds: this.guilds.map(g => g.id)
+          },
+          {
+            headers: {
+              Authorization: JSON.stringify({
+                id: this.id,
+                access_token: this.access_token
+              })
             }
-            return {
-              ...g,
-              image: link
-            };
-          });
-          this.guilds = formattedGuilds;
-          axios
-            .post(
-              `${import.meta.env.VITE_API}/servers`,
-              {
-                guilds: this.guilds.map(g => g.id)
-              },
-              {
-                headers: {
-                  Authorization: JSON.stringify({
-                    id: this.id,
-                    access_token: this.access_token
-                  })
-                }
-              }
-            )
-            .then(res => {
-              this.guildsWithBoat = res.data;
-            })
-            .catch(e => {
-              console.log('get servers errors', e);
-            });
+          }
+        )
+        .then(res => {
+          this.guildsWithBoat = res.data;
+          if (this.selectedGuild) {
+            const playlists = usePlaylistStore();
+            playlists.getPlaylistsForGuild(this.selectedGuild);
+          }
         })
         .catch(e => {
-          console.log('get guilds error', e);
+          console.log('get servers errors', e);
         })
         .finally(() => {
           this.isLoading = false;

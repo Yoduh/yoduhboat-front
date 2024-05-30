@@ -1,7 +1,7 @@
 <template>
   <div class="song flex">
     <div class="thumbnail">
-      <img :src="props.song.thumbnail" width="100" height="100" />
+      <img :src="thumbnail" />
     </div>
     <div
       class="song-info ml-5 flex flex-col justify-between w-full text-green-200"
@@ -9,24 +9,27 @@
       <div class="title-and-duration">
         <div>{{ title }}</div>
         <div class="text-sm text-emerald-300 opacity-50">
-          {{ props.song.durationTime }}
+          {{ queueSong?.durationTime ?? youtubeSong.durationRaw }}
         </div>
       </div>
-      <div class="flex items-center">
+      <div v-if="queueSong?.avatar" class="flex items-center">
         <div class="avatar">
           <div class="w-5 rounded-full">
-            <img :src="props.song.avatar" />
+            <img :src="queueSong.avatar" />
           </div>
         </div>
-        <div class="ml-2 text-emerald-300 opacity-50">
-          {{ props.song.addedBy }}
+        <div
+          v-if="queueSong?.addedBy"
+          class="ml-2 text-emerald-300 text-sm opacity-50"
+        >
+          {{ queueSong.addedBy }}
         </div>
       </div>
     </div>
-    <div class="remove">
+    <div v-if="queueSong?.durationTime" class="remove">
       <button
         class="btn btn-circle btn-outline btn-sm remove-btn"
-        @click="$emit('remove', song)"
+        @click="$emit('remove', queueSong)"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -48,18 +51,41 @@
 </template>
 
 <script setup lang="ts">
-import { PropType, computed } from 'vue';
-import { useQueueStore } from '@/stores/queue.js';
+import { computed } from 'vue';
+import type { PropType } from 'vue';
 
 const props = defineProps({
-  song: {
+  queueSong: {
     type: Object as PropType<Song>,
-    default: () => ({})
+    default: () => null
+  },
+  youtubeSong: {
+    type: Object as PropType<YoutubeResult>,
+    default: () => null
   }
 });
 
-const queue = useQueueStore();
-const title = computed(() => queue.getQueueSongTitle(props.song._id));
+const title = computed(() => {
+  if (props.queueSong) {
+    if (props.queueSong.artist)
+      return `${props.queueSong.artist} - ${props.queueSong.title}`;
+    else return `${props.queueSong.title}`;
+  } else {
+    return props.youtubeSong.title;
+  }
+});
+
+const thumbnail = computed(() => {
+  if (props.queueSong) {
+    return props.queueSong.thumbnail;
+  } else if (
+    props.youtubeSong?.thumbnails &&
+    props.youtubeSong.thumbnails.length > 0
+  ) {
+    return props.youtubeSong.thumbnails[0].url;
+  }
+  return '';
+});
 
 defineEmits(['remove']);
 </script>

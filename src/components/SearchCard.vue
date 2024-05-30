@@ -15,37 +15,81 @@
         </div>
       </div>
     </div>
-    <div class="add">
-      <button
+    <div class="add flex">
+      <div
         v-if="!props.result.added"
-        class="btn btn-circle btn-outline btn-sm"
-        @click="addResult"
+        class="tooltip"
+        :data-tip="`Add to ${queueOrPlaylist}`"
       >
-        <PlaylistPlus />
-      </button>
+        <button
+          :disabled="props.addToPlaylist && !props.playlist"
+          class="btn btn-circle btn-outline btn-sm"
+          @click="addResult"
+        >
+          <PlaylistPlus />
+        </button>
+      </div>
       <button
         v-else
         class="btn btn-success btn-circle btn-outline btn-sm added"
       >
         <PlaylistCheck />
       </button>
+      <div
+        v-if="!props.result.addedNext"
+        class="tooltip"
+        :data-tip="
+          props.addToPlaylist
+            ? 'Only available when adding to Queue'
+            : `Add to TOP of Queue`
+        "
+      >
+        <button
+          :disabled="props.addToPlaylist"
+          class="btn btn-circle btn-outline btn-sm ml-2"
+          @click="addResultNext"
+        >
+          <ArrowULeftTop />
+        </button>
+      </div>
+      <button
+        v-else
+        class="btn btn-success btn-circle btn-outline btn-sm added ml-2"
+      >
+        <Check />
+      </button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { PropType, computed } from 'vue';
+import { computed, watch } from 'vue';
+import type { PropType } from 'vue';
 import PlaylistPlus from 'vue-material-design-icons/PlaylistPlus.vue';
 import PlaylistCheck from 'vue-material-design-icons/PlaylistCheck.vue';
-import { useQueueStore } from '@/stores/queue';
+import ArrowULeftTop from 'vue-material-design-icons/ArrowULeftTop.vue';
+import Check from 'vue-material-design-icons/Check.vue';
 import { useSearchStore } from '@/stores/search';
 
+const emit = defineEmits(['add', 'addnext']);
 const props = defineProps({
   result: {
     type: Object as PropType<YoutubeResult>,
     default: () => ({})
+  },
+  playlist: {
+    type: [String, null] as PropType<string | null>,
+    default: null
+  },
+  addToPlaylist: {
+    type: Boolean,
+    default: false
   }
 });
+
+const queueOrPlaylist = computed(() =>
+  props.addToPlaylist ? 'Playlist' : 'Queue'
+);
 
 const thumbnail = computed(() => {
   if (props.result?.thumbnails && props.result.thumbnails.length > 0) {
@@ -54,12 +98,20 @@ const thumbnail = computed(() => {
   return '';
 });
 
-const queue = useQueueStore();
 const searchStore = useSearchStore();
-const addResult = () => {
-  queue.addSong(props.result.url);
-  searchStore.setAdded(props.result);
-};
+function addResult() {
+  emit('add', props.result);
+}
+function addResultNext() {
+  emit('addnext', props.result);
+}
+
+watch(
+  () => props.addToPlaylist,
+  () => {
+    searchStore.resetAdditions();
+  }
+);
 </script>
 
 <style scoped></style>

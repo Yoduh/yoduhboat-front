@@ -15,7 +15,7 @@
     v-else-if="!user.botChannel && !user.voiceChannel"
     class="h-full flex items-center justify-center text-2xl"
   >
-    Please join any voice channel on to begin
+    Please join any voice channel to begin
   </div>
   <div
     v-else-if="user.botChannel && user.voiceChannel !== user.botChannel.id"
@@ -25,27 +25,23 @@
     <span class="ml-3 text-lime-300 italic">{{ user.botChannel.name }}</span>
   </div>
   <div v-else class="home">
-    <div class="container mx-auto">
-      <Tabs @select="selectTab" />
-      <Queue v-if="!isSearching" />
-      <Search v-else />
+    <div class="mx-3 sm:mx-10 md:mx-24 lg:mx-64 xl:mx-96 xl:mx-100">
+      <Tabs @select-tab="selectTab" />
+      <RouterView />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import type { Ref } from 'vue';
-import Queue from '@/components/Queue.vue';
 import Tabs from '@/components/Tabs.vue';
-import Search from '../components/Search.vue';
 import { useUserStore } from '@/stores/user';
+import { useRouter } from 'vue-router';
 
 const user = useUserStore();
 
-const isSearching: Ref<boolean> = ref(false);
-function selectTab(searching: boolean) {
-  isSearching.value = searching;
+const router = useRouter();
+function selectTab(tabName: string) {
+  router.push(`/${tabName}`);
 }
 </script>
 
@@ -53,5 +49,12 @@ function selectTab(searching: boolean) {
 .home {
   flex: 1;
   overflow: auto;
+}
+
+@media (min-width: 1536px) {
+  .xl\:mx-100 {
+    margin-left: 34rem;
+    margin-right: 34rem;
+  }
 }
 </style>

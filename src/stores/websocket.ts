@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { useUserStore } from './user';
 import { useQueueStore } from '@/stores/queue';
+import { usePlaylistStore } from '@/stores/playlist';
 
 export const useWebsocketStore = defineStore({
   id: 'websocket',
@@ -13,10 +14,7 @@ export const useWebsocketStore = defineStore({
     openWebsocket(guildId: string) {
       const user = useUserStore();
       const queue = useQueueStore();
-      console.log(
-        'opening websocket with id',
-        user.id ? user.id : localStorage.id
-      );
+      const playlistStore = usePlaylistStore();
       if (this.socket) this.socket.close();
       this.socket = new WebSocket(
         `${import.meta.env.VITE_WSS}?userId=${
@@ -25,7 +23,6 @@ export const useWebsocketStore = defineStore({
       );
       this.socket.onopen = () => {
         const guild = JSON.stringify({ guild: guildId });
-        console.log('sending socket guild', guild);
         this.socket?.send(guild);
         this.missedHeartbeats = 0;
         this.interval = setInterval(() => this.ping(), 5000);
@@ -38,12 +35,14 @@ export const useWebsocketStore = defineStore({
         if (response === 'pong') {
           this.missedHeartbeats = 0;
           return;
+        } else if (response === 'playlist updated') {
+          playlistStore.getPlaylistsForGuild(guildId);
+          return;
         }
         for (const key in response) {
           if (key === 'userId') continue;
           switch (key) {
             case 'botVoiceChannel':
-              console.log('botVoiceId', response.botVoiceChannel);
               user.botChannel = response.botVoiceChannel;
               break;
             case 'userVoiceId':
@@ -56,27 +55,23 @@ export const useWebsocketStore = defineStore({
               queue.isPlaying = response.isPlaying;
               break;
             case 'isPaused':
-              console.log('setting pause status', response.isPaused);
               queue.isPaused = response.isPaused;
               break;
             case 'queue':
-              console.log('setting new queue', response.queue);
               queue.setQueue(response.queue);
               break;
             case 'doneSong':
-              console.log('current song is DONE');
               queue.doneSong(response.doneSong);
               break;
             case 'playTime':
-              console.log('received playTime from server', response.playTime);
+              // console.log('received playTime from server', response.playTime);
               if (queue.isPaused) {
-                console.log('IGNORING WHILE PAUSED');
+                // console.log('IGNORING WHILE PAUSED');
                 break;
               }
               queue.setPlayTime(response.playTime, true);
               break;
             case 'initialTime':
-              console.log('initialTime from server', response.initialTime);
               queue.setPlayTime(response.initialTime, true);
               break;
             default:

@@ -1,5 +1,5 @@
 <template>
-  <Navbar />
+  <Navbar id="mynavbar" class="mynavbarclass" />
   <router-view></router-view>
   <Player
     v-if="
@@ -19,15 +19,11 @@ const user = useUserStore();
 const ws = useWebsocketStore();
 onMounted(async () => {
   if (user.id === '' && localStorage.token) {
-    console.log('setting token from storage');
     user.isLoading = true;
     user.setToken(JSON.parse(localStorage.token));
     if (localStorage.guild) {
       const guildId = JSON.parse(localStorage.guild).id;
       user.selectedGuild = guildId;
-      console.log('setting guild and opening ws', guildId);
-      console.log('ws', ws);
-      console.log('ws.socket', ws.socket);
       ws.openWebsocket(guildId);
     }
   }
@@ -40,6 +36,7 @@ onMounted(async () => {
   flex-direction: column;
   height: 100vh;
   max-height: 100vh;
+  width: 100vw;
 }
 html,
 body {
