@@ -45,14 +45,19 @@
       </div>
     </div>
     <div class="add">
-      <button
+      <div
         v-if="!searchPlaylist.added"
-        :disabled="props.addToPlaylist && !props.playlist"
-        class="btn btn-circle btn-outline btn-sm"
-        @click="addResult"
+        class="tooltip"
+        :data-tip="`Add to ${queueOrPlaylist}`"
       >
-        <PlaylistPlus />
-      </button>
+        <button
+          :disabled="props.addToPlaylist && !props.playlist"
+          class="btn btn-circle btn-outline btn-sm"
+          @click="addResult"
+        >
+          <PlaylistPlus />
+        </button>
+      </div>
       <button
         v-else
         class="btn btn-success btn-circle btn-outline btn-sm added"
@@ -64,7 +69,7 @@
 </template>
 
 <script setup lang="ts">
-import { watch, ref } from 'vue';
+import { watch, ref, computed } from 'vue';
 import type { PropType } from 'vue';
 import QueueCard from '@/components/QueueCard.vue';
 import PlaylistPlus from 'vue-material-design-icons/PlaylistPlus.vue';
@@ -96,6 +101,9 @@ watch(
   () => {
     searchStore.resetAdditions();
   }
+);
+const queueOrPlaylist = computed(() =>
+  props.addToPlaylist ? 'Playlist' : 'Queue'
 );
 
 const activePlaylist = ref();

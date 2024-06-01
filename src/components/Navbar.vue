@@ -47,12 +47,10 @@
         <button class="btn gap-2 profile-btn bg-base-300">
           <div class="avatar">
             <div class="w-10 rounded-full">
-              <img
-                :src="`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`"
-              />
+              <img :src="avatar" />
             </div>
           </div>
-          <div class="pl-2 pr-4">Yoduh</div>
+          <div class="pl-2 pr-4">{{ user.global_name }}</div>
         </button>
         <ul
           tabindex="0"
@@ -82,6 +80,13 @@ const user = useUserStore();
 const socket = useWebsocketStore();
 const playlists = usePlaylistStore();
 const router = useRouter();
+
+const avatar = computed(() => {
+  if (user?.avatar === '' || user?.avatar?.includes('/null')) {
+    return defaultImage;
+  }
+  return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
+});
 
 function selectGuild(guild: Guild) {
   (document?.activeElement as HTMLElement).blur();

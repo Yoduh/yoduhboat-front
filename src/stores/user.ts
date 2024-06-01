@@ -17,6 +17,7 @@ export const useUserStore = defineStore({
     token_type: '',
     id: '',
     username: '',
+    global_name: '',
     avatar: '',
     guilds: [] as Guild[],
     guildsWithBoat: [] as string[],
@@ -59,6 +60,7 @@ export const useUserStore = defineStore({
           localStorage.id = dbUser.data.userId;
           this.id = dbUser.data.userId;
           this.username = dbUser.data.username;
+          this.global_name = dbUser.data.global_name;
           this.avatar = dbUser.data.avatar;
           this.guilds = dbUser.data.guilds;
           this.setUserGuilds();
