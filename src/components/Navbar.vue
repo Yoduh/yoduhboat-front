@@ -3,6 +3,10 @@
     <div class="flex-1">
       <img :src="xwing" class="h-6 w-20" />
       <div class="font-bold normal-case text-3xl p-0 ml-3">YoduhBoat</div>
+      <div class="italic ml-5">
+        Things are in beta. Try refreshing and/or clearing queue if things
+        break.
+      </div>
     </div>
     <div class="flex-none">
       <div v-if="user.guildsWithBoat.length > 0" class="mr-10">
