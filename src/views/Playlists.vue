@@ -1,14 +1,34 @@
 <template>
   <div id="playlists">
-    <div class="text-5xl my-5">Playlists</div>
+    <div class="text-5xl my-5">{{ user.selectedGuildName }} Playlists</div>
+    <div class="dropdown">
+      <input
+        v-model="filterText"
+        class="input input-bordered"
+        placeholder="Filter by playlist name"
+      />
+      <ul
+        ref="filterDropdown"
+        tabindex="0"
+        class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52 max-h-80 flex-nowrap overflow-auto"
+      >
+        <li v-for="item in filteredPlaylists" :key="item.id">
+          <a @click.prevent="filter(item.name)">{{ item.name }}</a>
+        </li>
+      </ul>
+    </div>
+
     <button
-      class="btn bg-green-800 text-white mt-10 hover:bg-green-600"
+      class="btn bg-green-800 text-white hover:bg-green-600 ml-5"
       @click="newDialog = true"
     >
       Create new playlist
     </button>
-    <div class="text-2xl mt-10">{{ user.selectedGuildName }} playlists:</div>
-    <div v-for="(playlist, i) in playlists" :key="playlist.id" class="my-8">
+    <div
+      v-for="(playlist, i) in filteredPlaylists"
+      :key="playlist.id"
+      class="my-8"
+    >
       <div class="flex justify-between">
         <div class="flex">
           <div class="text-2xl text-green-500 mr-2 mb-1">
@@ -140,7 +160,8 @@ import MyDialog from '@/components/Dialog.vue';
 import { useUserStore } from '@/stores/user';
 import { usePlaylistStore } from '@/stores/playlist';
 import { storeToRefs } from 'pinia';
-import { onUnmounted, watch, ref } from 'vue';
+import { onUnmounted, watch, ref, computed } from 'vue';
+import { useFocus } from '@vueuse/core';
 import PlaylistPlus from 'vue-material-design-icons/PlaylistPlus.vue';
 import PlaylistCheck from 'vue-material-design-icons/PlaylistCheck.vue';
 import DeleteOutline from 'vue-material-design-icons/DeleteOutline.vue';
@@ -148,6 +169,17 @@ import DeleteOutline from 'vue-material-design-icons/DeleteOutline.vue';
 const user = useUserStore();
 const store = usePlaylistStore();
 const { playlists, activePlaylist } = storeToRefs(store);
+
+const filterDropdown = ref();
+const { focused } = useFocus(filterDropdown);
+const filterText = ref('');
+const filteredPlaylists = computed(() =>
+  playlists.value.filter(p => p.name.toLowerCase().includes(filterText.value))
+);
+function filter(name: string) {
+  filterText.value = name;
+  focused.value = false;
+}
 
 const songToRemove = ref<{
   name: string;

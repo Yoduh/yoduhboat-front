@@ -26,7 +26,7 @@
   </div>
   <div v-else class="home">
     <div class="mx-3 sm:mx-10 md:mx-24 lg:mx-64 xl:mx-96 xl:mx-100">
-      <Tabs @select-tab="selectTab" />
+      <Tabs />
       <RouterView />
     </div>
   </div>
@@ -35,14 +35,8 @@
 <script setup lang="ts">
 import Tabs from '@/components/Tabs.vue';
 import { useUserStore } from '@/stores/user';
-import { useRouter } from 'vue-router';
 
 const user = useUserStore();
-
-const router = useRouter();
-function selectTab(tabName: string) {
-  router.push(`/${tabName}`);
-}
 </script>
 
 <style scoped>

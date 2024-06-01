@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { useUserStore } from './user';
 import { useQueueStore } from '@/stores/queue';
 import { usePlaylistStore } from '@/stores/playlist';
+import { useAlertStore } from './alert';
 
 export const useWebsocketStore = defineStore({
   id: 'websocket',
@@ -14,6 +15,7 @@ export const useWebsocketStore = defineStore({
     openWebsocket(guildId: string) {
       const user = useUserStore();
       const queue = useQueueStore();
+      const alert = useAlertStore();
       const playlistStore = usePlaylistStore();
       if (this.socket) this.socket.close();
       this.socket = new WebSocket(
@@ -42,6 +44,9 @@ export const useWebsocketStore = defineStore({
         for (const key in response) {
           if (key === 'userId') continue;
           switch (key) {
+            case 'error':
+              alert.setMessage(response.error);
+              break;
             case 'botVoiceChannel':
               user.botChannel = response.botVoiceChannel;
               break;

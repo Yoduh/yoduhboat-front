@@ -4,8 +4,8 @@
       <button
         role="tab"
         class="btn btn-ghost mx-3"
-        :class="{ activeTab: activeTab === '' }"
-        @click="activateTab('')"
+        :class="{ activeTab: activeTab === 'Queue' }"
+        @click="clickTab('Queue')"
       >
         Queue
       </button>
@@ -13,7 +13,7 @@
         v-if="!isSearching"
         role="tab"
         class="btn btn-ghost mx-3"
-        @click="activateTab('search')"
+        @click="clickTab('Search')"
       >
         Search
       </button>
@@ -32,8 +32,8 @@
         role="tab"
         :disabled="user.selectedGuild === ''"
         class="btn btn-ghost mx-3"
-        :class="{ activeTab: activeTab === 'playlists' }"
-        @click="activateTab('playlists')"
+        :class="{ activeTab: activeTab === 'Playlists' }"
+        @click="clickTab('Playlists')"
       >
         Playlists
       </button>
@@ -42,36 +42,33 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, ref, watch } from 'vue';
+import { nextTick, ref, watch, computed } from 'vue';
 import Youtube from 'vue-material-design-icons/Youtube.vue';
-import { api } from '@/plugins/api';
 import { useSearchStore } from '@/stores/search';
 import { useUserStore } from '@/stores/user';
 import { useRoute } from 'vue-router';
+import { useRouter } from 'vue-router';
 
 const user = useUserStore();
 const route = useRoute();
+const router = useRouter();
 const isSearching = ref(route.name === 'Search');
 const searchText = ref('');
-const emit = defineEmits(['selectTab']);
 const searchStore = useSearchStore();
 
-const activeTab = ref('');
-function activateTab(tab: string) {
-  activeTab.value = tab;
-  if (tab === 'search') {
+const activeTab = computed(() => route.name);
+function clickTab(tab: string) {
+  if (tab === 'Search') {
     isSearching.value = true;
     searchStore.resetAdditions();
   } else {
     isSearching.value = false;
   }
-  emit('selectTab', tab);
+  router.push({ name: tab });
 }
 async function search(e: KeyboardEvent) {
   if (e.key === 'Enter') {
-    api.post('/search', { text: searchText.value }).then(res => {
-      searchStore.setSearchList(res.data);
-    });
+    searchStore.search(searchText.value);
   }
 }
 

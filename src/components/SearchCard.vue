@@ -1,7 +1,7 @@
 <template>
   <div class="song flex">
-    <div class="thumbnail">
-      <img :src="thumbnail" width="100" height="100" />
+    <div class="thumbnail w-56">
+      <img :src="thumbnail" />
     </div>
     <div
       class="song-info ml-5 flex flex-col justify-between w-full text-green-200"

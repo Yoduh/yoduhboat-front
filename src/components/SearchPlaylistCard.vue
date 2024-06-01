@@ -1,7 +1,7 @@
 <template>
   <div v-if="searchPlaylist" class="song flex">
-    <div class="thumbnail">
-      <img :src="searchPlaylist.thumbnail.url" width="200" />
+    <div v-if="searchPlaylist.thumbnail" class="thumbnail w-56">
+      <img :src="searchPlaylist.thumbnail" />
     </div>
     <div
       class="song-info ml-5 flex flex-col justify-between w-full text-green-200"

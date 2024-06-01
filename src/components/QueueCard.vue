@@ -1,7 +1,9 @@
 <template>
   <div class="song flex">
-    <div class="thumbnail">
-      <img :src="thumbnail" />
+    <div class="thumbnail w-56">
+      <a :href="queueSong?.link ?? youtubeSong.url" target="_blank">
+        <img :src="thumbnail" />
+      </a>
     </div>
     <div
       class="song-info ml-5 flex flex-col justify-between w-full text-green-200"
@@ -12,10 +14,10 @@
           {{ queueSong?.durationTime ?? youtubeSong.durationRaw }}
         </div>
       </div>
-      <div v-if="queueSong?.avatar" class="flex items-center">
+      <div v-if="queueSong?.addedBy" class="flex items-center">
         <div class="avatar">
           <div class="w-5 rounded-full">
-            <img :src="queueSong.avatar" />
+            <img :src="avatar" />
           </div>
         </div>
         <div
@@ -51,6 +53,7 @@
 </template>
 
 <script setup lang="ts">
+import defaultImage from '@/assets/discord-logo.png';
 import { computed } from 'vue';
 import type { PropType } from 'vue';
 
@@ -85,6 +88,13 @@ const thumbnail = computed(() => {
     return props.youtubeSong.thumbnails[0].url;
   }
   return '';
+});
+
+const avatar = computed(() => {
+  if (props.queueSong && props.queueSong.avatar?.includes('/null')) {
+    return defaultImage;
+  }
+  return props.queueSong.avatar;
 });
 
 defineEmits(['remove']);

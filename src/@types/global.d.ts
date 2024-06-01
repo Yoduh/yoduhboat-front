@@ -54,11 +54,7 @@ type YoutubePlaylist = {
   id: string;
   count: number;
   songs: YoutubeResult[];
-  thumbnail: {
-    url: string;
-    width: number;
-    height: number;
-  };
+  thumbnail: string;
   title: string;
   url: string;
   channel: Record<string, unknown>;

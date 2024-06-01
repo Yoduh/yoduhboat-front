@@ -2,7 +2,7 @@
   <div id="nav" class="navbar z-40">
     <div class="flex-1">
       <img :src="xwing" class="h-6 w-20" />
-      <a class="btn btn-ghost normal-case text-3xl p-0 ml-3">YoduhBoat</a>
+      <div class="font-bold normal-case text-3xl p-0 ml-3">YoduhBoat</div>
     </div>
     <div class="flex-none">
       <div v-if="user.guildsWithBoat.length > 0" class="mr-10">

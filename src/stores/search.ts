@@ -1,12 +1,20 @@
 import { defineStore } from 'pinia';
+import { api } from '@/plugins/api';
 
 export const useSearchStore = defineStore({
   id: 'search',
   state: () => ({
     searchList: [] as YoutubeResult[],
-    playlist: null as YoutubePlaylist | null
+    playlist: null as YoutubePlaylist | null,
+    loading: false
   }),
   actions: {
+    search(searchText: string) {
+      this.loading = true;
+      api.post('/search', { text: searchText }).then(res => {
+        this.setSearchList(res.data);
+      });
+    },
     setSearchList(result: YoutubeResult[] | YoutubePlaylist) {
       if ('count' in result) {
         this.playlist = { ...result, added: false, addedNext: false };
@@ -17,6 +25,7 @@ export const useSearchStore = defineStore({
         });
         this.playlist = null;
       }
+      this.loading = false;
     },
     resetAdditions() {
       this.searchList = this.searchList.map(r => {

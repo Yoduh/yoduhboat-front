@@ -1,4 +1,5 @@
 <template>
+  <Alert v-if="display" />
   <Navbar id="mynavbar" class="mynavbarclass" />
   <router-view></router-view>
   <Player
@@ -9,11 +10,14 @@
 </template>
 
 <script setup lang="ts">
+import Alert from '@/components/Alert.vue';
 import Navbar from '@/components/Navbar.vue';
 import { onMounted } from 'vue';
 import Player from '@/components/Player.vue';
 import { useUserStore } from '@/stores/user';
 import { useWebsocketStore } from '@/stores/websocket';
+import { useAlertStore } from './stores/alert';
+import { storeToRefs } from 'pinia';
 
 const user = useUserStore();
 const ws = useWebsocketStore();
@@ -28,6 +32,9 @@ onMounted(async () => {
     }
   }
 });
+
+const alertStore = useAlertStore();
+const { display } = storeToRefs(alertStore);
 </script>
 
 <style>

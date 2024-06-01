@@ -1,9 +1,21 @@
 <template>
   <div id="search">
-    <div class="text-5xl my-5">YouTube Search</div>
+    <div class="text-5xl mt-5">YouTube Search</div>
+    <div class="text-md mb-8 italic">
+      Supports text search, YouTube playlist links, and all Spotify links
+    </div>
     <div class="form-control flex justify-start">
       <div class="text-xl flex items-center" style="min-height: 48px">
-        Adding to {{ sources[0] }}
+        Adding to
+
+        <div class="tooltip flex" :data-tip="`Switch to ${sources[1]}`">
+          <button
+            class="label-text mr-3 btn my-3 bg-green-800 hover:bg-green-600 text-white text-xl px-2 ml-1"
+            @click="toggle"
+          >
+            {{ sources[0] }}
+          </button>
+        </div>
         <span v-if="addToPlaylist"
           ><select
             v-model="selectedPlaylist"
@@ -32,13 +44,10 @@
     >
       Must select playlist before adding songs!
     </div>
-    <button
-      class="label-text mr-3 btn my-3 bg-green-800 hover:bg-green-600 text-white"
-      @click="toggle"
-    >
-      Add to {{ sources[1] }} instead
-    </button>
-    <div class="queue w-full divide-y divide-solid divide-emerald-800">
+    <div v-if="searchStore.loading">
+      <span class="loading loading-bars loading-lg"></span>
+    </div>
+    <div v-else class="queue w-full divide-y divide-solid divide-emerald-800">
       <SearchPlaylistCard
         v-if="searchStore.playlist"
         :playlist="selectedPlaylist"
