@@ -45,7 +45,7 @@ export const useWebsocketStore = defineStore({
           if (key === 'userId') continue;
           switch (key) {
             case 'error':
-              alert.setMessage(response.error);
+              alert.setMessage(response.error, 'error', 5000);
               break;
             case 'botVoiceChannel':
               user.botChannel = response.botVoiceChannel;

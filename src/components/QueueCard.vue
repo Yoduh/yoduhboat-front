@@ -30,6 +30,7 @@
     </div>
     <div v-if="queueSong?.durationTime" class="remove">
       <button
+        :disabled="isDraggable"
         class="btn btn-circle btn-outline btn-sm remove-btn"
         @click="$emit('remove', queueSong)"
       >
@@ -65,6 +66,10 @@ const props = defineProps({
   youtubeSong: {
     type: Object as PropType<YoutubeResult>,
     default: () => null
+  },
+  isDraggable: {
+    type: Boolean,
+    default: false
   }
 });
 

@@ -72,25 +72,44 @@
           <input
             v-model="activePlaylist"
             type="checkbox"
-            :true-value="playlist"
+            :true-value="JSON.parse(JSON.stringify(playlist))"
             :false-value="null"
           />
           <div class="collapse-title text-xl font-medium">
             Songs: {{ playlist.songsNum }}
           </div>
-          <div class="collapse-content">
-            <div v-if="!playlist.songs">Loading...</div>
-            <div v-else-if="playlist.songs.length === 0">
+          <div v-if="activePlaylist" class="collapse-content">
+            <div v-if="!activePlaylist.songs">Loading...</div>
+            <div v-else-if="activePlaylist.songs?.length === 0">
               No songs on this playlist
             </div>
             <div v-else>
-              <QueueCard
-                v-for="(song, idx) in playlist.songs"
-                :key="song._id"
-                :queue-song="song"
-                class="p-3 basis-1/4"
-                @remove="confirmRemoveSong(playlist.name, idx, song.title)"
-              />
+              <div v-if="!drag" class="flex btn" @click="toggleDrag">
+                Order locked <Lock />
+              </div>
+              <div v-else class="flex btn" @click="toggleDrag">
+                Order unlocked <LockOpen />
+              </div>
+              <draggable
+                v-model="activePlaylist.songs"
+                :disabled="!drag"
+                item-key="_id"
+                ghost-class="ghost"
+                :scroll-sensitivity="100"
+                :force-fallback="true"
+              >
+                <template #item="{ element: song }">
+                  <QueueCard
+                    :key="song._id"
+                    :queue-song="song"
+                    class="p-3 basis-1/4"
+                    :class="{ draggable: drag }"
+                    :is-draggable="drag"
+                    :style="{ userSelect: drag ? 'none' : 'default' }"
+                    @remove="confirmRemoveSong(activePlaylist!.id, song)"
+                  />
+                </template>
+              </draggable>
             </div>
           </div>
         </div>
@@ -159,16 +178,20 @@ import QueueCard from '@/components/QueueCard.vue';
 import MyDialog from '@/components/Dialog.vue';
 import { useUserStore } from '@/stores/user';
 import { usePlaylistStore } from '@/stores/playlist';
+import { useAlertStore } from '@/stores/alert';
 import { storeToRefs } from 'pinia';
 import { onUnmounted, watch, ref, computed } from 'vue';
 import { useFocus } from '@vueuse/core';
 import PlaylistPlus from 'vue-material-design-icons/PlaylistPlus.vue';
 import PlaylistCheck from 'vue-material-design-icons/PlaylistCheck.vue';
 import DeleteOutline from 'vue-material-design-icons/DeleteOutline.vue';
+import Lock from 'vue-material-design-icons/Lock.vue';
+import LockOpen from 'vue-material-design-icons/LockOpen.vue';
+import draggable from 'vuedraggable';
 
 const user = useUserStore();
 const store = usePlaylistStore();
-const { playlists, activePlaylist } = storeToRefs(store);
+const { playlists, activePlaylist, unsaved } = storeToRefs(store);
 
 const filterDropdown = ref();
 const { focused } = useFocus(filterDropdown);
@@ -187,17 +210,17 @@ const songToRemove = ref<{
   index: number;
 } | null>(null);
 const songDialog = ref(false);
-function confirmRemoveSong(
-  playlistName: string,
-  index: number,
-  songName: string
-) {
-  songToRemove.value = {
-    name: songName,
-    playlist: playlistName,
-    index: index
-  };
-  songDialog.value = true;
+function confirmRemoveSong(playlistId: string, song: Song) {
+  const playlist = playlists.value.find(p => p.id === playlistId);
+  if (playlist) {
+    const index = playlist.songs!.indexOf(song);
+    songToRemove.value = {
+      name: song.title,
+      playlist: playlist.name,
+      index: index
+    };
+    songDialog.value = true;
+  }
 }
 async function removeSong() {
   if (songToRemove.value) {
@@ -217,6 +240,7 @@ async function removeSong() {
 watch(
   () => activePlaylist.value?.id,
   () => {
+    drag.value = false;
     if (activePlaylist.value && !activePlaylist.value.songs) {
       store.getSongsForPlaylist(activePlaylist.value.id);
     }
@@ -284,6 +308,42 @@ function createPlaylist() {
   }
 }
 
+const drag = ref(false);
+function toggleDrag() {
+  if (drag.value && unsaved.value) {
+    // save new order
+  }
+  drag.value = !drag.value;
+}
+
+const alertStore = useAlertStore();
+watch(unsaved, val => {
+  if (val) {
+    const message = 'You have unsaved changes!';
+    const btn1 = {
+      title: 'Save',
+      fn: () => {
+        store.setNewOrder();
+        drag.value = false;
+        alertStore.forceClose();
+      }
+    };
+    const btn2 = {
+      title: 'Cancel',
+      fn: () => {
+        drag.value = false;
+        alertStore.forceClose();
+        store.resetActivePlaylistOrder();
+      }
+    };
+    alertStore.setMessage(message, 'info', null);
+    alertStore.setButtons(btn1, btn2);
+  }
+  if (!val) {
+    alertStore.forceClose();
+  }
+});
+
 onUnmounted(() => {
   activePlaylist.value = null;
 });
@@ -297,5 +357,14 @@ onUnmounted(() => {
   margin-left: auto;
   margin-right: auto;
   width: 200px;
+}
+
+.ghost {
+  opacity: 0.5;
+  background: #1f5d38;
+}
+
+.draggable {
+  cursor: move;
 }
 </style>

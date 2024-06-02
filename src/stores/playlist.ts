@@ -8,6 +8,23 @@ export const usePlaylistStore = defineStore({
     playlists: [] as Playlist[],
     activePlaylist: null as Playlist | null
   }),
+  getters: {
+    unsaved() {
+      if (this.activePlaylist && this.activePlaylist.songs) {
+        const activeSongs: Array<string> = this.activePlaylist.songs.map(
+          s => s._id
+        );
+        const playlist = this.playlists.find(
+          p => p.id === this.activePlaylist?.id
+        );
+        if (playlist && playlist.songs) {
+          const playlistSongs: Array<string> = playlist.songs?.map(s => s._id);
+          return !playlistSongs.every((s, index) => activeSongs[index] === s);
+        }
+      }
+      return false;
+    }
+  },
   actions: {
     setPlaylists(lists: Playlist[]) {
       this.playlists = lists;
@@ -37,9 +54,14 @@ export const usePlaylistStore = defineStore({
           }
         })
         .then(res => {
-          const playlist = this.playlists.find(p => p.id === id);
-          if (playlist) {
-            playlist.songs = res.data.songs;
+          if (this.activePlaylist) {
+            this.activePlaylist.songs = res.data.songs;
+            const playlist = this.playlists.find(
+              p => p.id === this.activePlaylist?.id
+            );
+            if (playlist) {
+              playlist.songs = res.data.songs;
+            }
           }
         })
         .catch(e => {
@@ -58,6 +80,28 @@ export const usePlaylistStore = defineStore({
         .catch(e => {
           console.error(e);
         });
+    },
+    resetActivePlaylistOrder() {
+      const playlist = this.playlists.find(
+        p => p.id === this.activePlaylist?.id
+      );
+      if (playlist) {
+        this.activePlaylist = JSON.parse(JSON.stringify(playlist));
+      }
+    },
+    setNewOrder() {
+      if (this.activePlaylist) {
+        const songs = this.activePlaylist.songs?.map((s, idx) => {
+          return { id: s._id, order: idx + 1 };
+        });
+        if (songs) {
+          const user = useUserStore();
+          api.post('/playlist/reorder', {
+            guildId: user.selectedGuild,
+            songs: songs
+          });
+        }
+      }
     }
   }
 });
