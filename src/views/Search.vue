@@ -6,16 +6,22 @@
     </div>
     <div class="form-control flex justify-start">
       <div class="text-xl flex items-center" style="min-height: 48px">
-        Adding to
+        Add to
 
-        <div class="tooltip flex" :data-tip="`Switch to ${sources[1]}`">
-          <button
-            class="label-text mr-3 btn my-3 bg-green-800 hover:bg-green-600 text-white text-xl px-2 ml-1"
-            @click="toggle"
-          >
-            {{ sources[0] }}
-          </button>
-        </div>
+        <button
+          :class="{ isActive: !addToPlaylist }"
+          class="label-text btn my-3 text-xl px-2 ml-1 mr-2"
+          @click="toggle"
+        >
+          Queue
+        </button>
+        <button
+          :class="{ isActive: addToPlaylist }"
+          class="label-text mr-3 btn my-3 text-xl px-2"
+          @click="toggle"
+        >
+          Playlist
+        </button>
         <span v-if="addToPlaylist"
           ><select
             v-model="selectedPlaylist"
@@ -133,4 +139,10 @@ function addPlaylistNext() {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.isActive {
+  cursor: default;
+  background-color: rgb(22 101 52);
+  color: white;
+}
+</style>

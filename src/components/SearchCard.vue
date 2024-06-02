@@ -1,28 +1,30 @@
 <template>
   <div class="song flex">
     <div class="thumbnail w-56">
-      <img :src="thumbnail" />
+      <a :href="result.url" target="_blank">
+        <img :src="thumbnail" />
+      </a>
     </div>
     <div
       class="song-info ml-5 flex flex-col justify-between w-full text-green-200"
     >
       <div class="title-and-duration">
-        <div>{{ props.result.title }}</div>
+        <div>{{ result.title }}</div>
         <div class="text-sm text-emerald-300 opacity-50 flex">
-          {{ props.result.channel.name }}
+          {{ result.channel.name }}
           <div class="mx-2 text-white">&#8226;</div>
-          {{ props.result.durationRaw }}
+          {{ result.durationRaw }}
         </div>
       </div>
     </div>
     <div class="add flex">
       <div
-        v-if="!props.result.added"
+        v-if="!result.added"
         class="tooltip"
         :data-tip="`Add to ${queueOrPlaylist}`"
       >
         <button
-          :disabled="props.addToPlaylist && !props.playlist"
+          :disabled="addToPlaylist && !playlist"
           class="btn btn-circle btn-outline btn-sm"
           @click="addResult"
         >
@@ -36,16 +38,16 @@
         <PlaylistCheck />
       </button>
       <div
-        v-if="!props.result.addedNext"
+        v-if="!result.addedNext"
         class="tooltip"
         :data-tip="
-          props.addToPlaylist
+          addToPlaylist
             ? 'Only available when adding to Queue'
             : `Add to TOP of Queue`
         "
       >
         <button
-          :disabled="props.addToPlaylist"
+          :disabled="addToPlaylist"
           class="btn btn-circle btn-outline btn-sm ml-2"
           @click="addResultNext"
         >
