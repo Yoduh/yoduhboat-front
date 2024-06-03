@@ -1,8 +1,8 @@
 <template>
   <div id="search">
     <div class="text-5xl mt-5">YouTube Search</div>
-    <div class="text-md mb-8 italic">
-      Supports text search, YouTube playlist links, and all Spotify links
+    <div class="text-sm italic">
+      Supports text search, YouTube playlist links, and all Spotify links.
     </div>
     <div class="form-control flex justify-start">
       <div class="text-xl flex items-center" style="min-height: 48px">
@@ -54,6 +54,14 @@
       <span class="loading loading-bars loading-lg"></span>
     </div>
     <div v-else class="queue w-full divide-y divide-solid divide-emerald-800">
+      <div
+        v-if="searchStore.spotify"
+        class="text-sm italic mt-4 mb-8 font-bold"
+      >
+        WARNING: Spotify songs are streamed from YouTube using top search result
+        of song title and artist and might not match the song as heard on
+        Spotify.
+      </div>
       <SearchPlaylistCard
         v-if="searchStore.playlist"
         :playlist="selectedPlaylist"

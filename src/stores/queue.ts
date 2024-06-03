@@ -29,7 +29,8 @@ export const useQueueStore = defineStore({
       this.ignoreSync = true;
       api
         .post(`/remove`, {
-          guild: user.selectedGuild,
+          guildId: user.selectedGuild,
+          userId: user.id,
           songId: song._id
         })
         .finally(() => (this.ignoreSync = false));
@@ -54,7 +55,8 @@ export const useQueueStore = defineStore({
       this.isPaused = !this.isPaused;
       const user = useUserStore();
       api.post(`/pause`, {
-        guild: user.selectedGuild,
+        guildId: user.selectedGuild,
+        userId: user.id,
         seekTime: sliderValue
       });
     },
@@ -75,7 +77,8 @@ export const useQueueStore = defineStore({
     shuffle() {
       const user = useUserStore();
       api.post(`/shuffle`, {
-        guild: user.selectedGuild
+        guildId: user.selectedGuild,
+        userId: user.id
       });
     },
     doneSong(song: Song) {

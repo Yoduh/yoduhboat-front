@@ -4,14 +4,16 @@ import { api } from '@/plugins/api';
 export const useSearchStore = defineStore({
   id: 'search',
   state: () => ({
+    searchText: '',
+    spotify: false,
     searchList: [] as YoutubeResult[],
     playlist: null as YoutubePlaylist | null,
     loading: false
   }),
   actions: {
-    search(searchText: string) {
+    search() {
       this.loading = true;
-      api.post('/search', { text: searchText }).then(res => {
+      api.post('/search', { text: this.searchText }).then(res => {
         this.setSearchList(res.data);
       });
     },
@@ -25,6 +27,9 @@ export const useSearchStore = defineStore({
         });
         this.playlist = null;
       }
+      this.spotify =
+        this.searchText.includes('spotify.com') &&
+        !this.searchText.includes('/track/');
       this.loading = false;
     },
     resetAdditions() {

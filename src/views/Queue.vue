@@ -37,7 +37,8 @@ function remove(song: Song, idx: number) {
 const user = useUserStore();
 function stop() {
   api.post(`/stop`, {
-    guildId: user.selectedGuild
+    guildId: user.selectedGuild,
+    userId: user.id
   });
 }
 </script>

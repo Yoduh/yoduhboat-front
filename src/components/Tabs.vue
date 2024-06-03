@@ -21,7 +21,7 @@
         <Youtube class="yt flex items-center" fill-color="#FF0000" />
         <input
           ref="searchInput"
-          v-model="searchText"
+          v-model="searchStore.searchText"
           type="text"
           placeholder="Search YouTube"
           class="search w-full max-w-xs"
@@ -36,6 +36,14 @@
         @click="clickTab('Playlists')"
       >
         Playlists
+      </button>
+      <button
+        role="history"
+        class="btn btn-ghost mx-3"
+        :class="{ activeTab: activeTab === 'History' }"
+        @click="clickTab('History')"
+      >
+        History
       </button>
     </div>
   </div>
@@ -68,7 +76,7 @@ function clickTab(tab: string) {
 }
 async function search(e: KeyboardEvent) {
   if (e.key === 'Enter') {
-    searchStore.search(searchText.value);
+    searchStore.search();
   }
 }
 

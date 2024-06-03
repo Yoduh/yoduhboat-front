@@ -72,3 +72,14 @@ type Playlist = {
   createdBy: string;
   songs?: Song[];
 };
+
+type ActionHistory = {
+  _id: string;
+  action: string | string[];
+  user: {
+    _id: string;
+    global_name: string;
+  };
+  song: Song;
+  createdAt: string;
+};
