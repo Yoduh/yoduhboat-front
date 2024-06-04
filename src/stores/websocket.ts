@@ -69,7 +69,6 @@ export const useWebsocketStore = defineStore({
               queue.doneSong(response.doneSong);
               break;
             case 'playTime':
-              // console.log('received playTime from server', response.playTime);
               if (queue.isPaused) {
                 // console.log('IGNORING WHILE PAUSED');
                 break;

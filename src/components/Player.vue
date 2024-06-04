@@ -53,7 +53,7 @@
           <SkipPrevious :size="40" />
         </button> -->
         <button
-          v-if="!queue.isPlaying || queue.isPaused"
+          v-if="!queue.isPlaying || queue.isPaused || !user.validVoiceState"
           class="mx-2 play-btn"
           :disabled="isDisabled"
           @click="play"
@@ -82,7 +82,7 @@
         </button> -->
       </div>
       <div
-        v-if="queue.songs.length > 0"
+        v-if="queue.songs.length > 0 && user.validVoiceState"
         class="playback-info flex items-center w-full h-full"
       >
         <div class="mr-3">{{ time }}</div>
@@ -129,7 +129,7 @@ const playingSong = computed(() => {
 });
 
 const isDisabled = computed(() => {
-  return queue?.songs?.length === 0;
+  return queue?.songs?.length === 0 || !user.validVoiceState;
 });
 // reset and disable controls if user leaves voice chat
 watch(
